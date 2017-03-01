@@ -1,0 +1,4 @@
+sqlalchemy
+dataone.libclient
+setuptools==33.1.1
+cachecontrol==0.11.6
