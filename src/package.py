@@ -32,7 +32,7 @@ class Package(object):
 
 
    def get_package(self):
-       return self.package
+       return self.scope + '.' + str(self.identifier) + '.' + str(self.revision)
 
    def get_scope(self):
        return self.scope
