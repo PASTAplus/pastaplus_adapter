@@ -21,18 +21,17 @@ logger = logging.getLogger('package')
 
 class Package(object):
 
-   def __init__(self, package=None):
-       self.package = package.split(".")
+   def __init__(self, package_str=None, datetime_str=None, event_str=None):
+       self.package_str = package_str.strip()
+       self.package = self.package_str.split(".")
        self.scope = self.package[0].strip()
-       self.identifier = int(self.package[1].strip())
-       self.revision = int(self.package[2].strip())
-
-   def set_datetime(self, datetime_str=None):
+       self.identifier = int(self.package[1])
+       self.revision = int(self.package[2])
        self.datetime = datetime.strptime(datetime_str, '%Y-%m-%dT%H:%M:%S.%f')
+       self.event = event_str.strip()
 
-
-   def get_package(self):
-       return self.scope + '.' + str(self.identifier) + '.' + str(self.revision)
+   def get_package_str(self):
+       return self.package_str
 
    def get_scope(self):
        return self.scope
@@ -45,6 +44,9 @@ class Package(object):
 
    def get_datetime(self):
        return self.datetime
+
+   def get_event_str(self):
+       return self.event
 
 
 def main():
