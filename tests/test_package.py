@@ -24,23 +24,25 @@ logger = logging.getLogger('test_package')
 
 class TestPackage(unittest.TestCase):
 
-    package = 'knb-lter-nin.12.14'
+    package_str = 'knb-lter-nin.12.14'
     scope = 'knb-lter-nin'
     identifier = 12
     revision = 14
     datetime_str = '2017-02-23T13:09:29.166'
     datetime = datetime.strptime(datetime_str, '%Y-%m-%dT%H:%M:%S.%f')
+    event_str = 'createDataPackage'
 
     def setUp(self):
-        self.package = Package(package=TestPackage.package)
-        self.package.set_datetime(datetime_str=TestPackage.datetime_str)
+        self.package = Package(package_str=TestPackage.package_str,
+                               datetime_str=TestPackage.datetime_str,
+                               event_str=TestPackage.event_str)
 
     def tearDown(self):
         pass
 
     def test_get_package(self):
-        package = self.package.get_package()
-        self.assertEqual(TestPackage.package,package)
+        package = self.package.get_package_str()
+        self.assertEqual(TestPackage.package_str,package)
 
     def test_get_scope(self):
         scope = self.package.get_scope()
@@ -59,6 +61,10 @@ class TestPackage(unittest.TestCase):
         self.assertEqual(TestPackage.datetime, datetime)
         datetime_str = datetime.strftime('%Y-%m-%dT%H:%M:%S.%f').rstrip('0')
         self.assertEqual(TestPackage.datetime_str, datetime_str)
+
+    def test_get_event(self):
+        event_str = self.package.get_event_str()
+        self.assertEqual(TestPackage.event_str, event_str)
 
 
 if __name__ == '__main__':
