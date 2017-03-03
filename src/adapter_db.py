@@ -18,14 +18,17 @@ import logging
 from sqlalchemy import Column, Integer, String, DateTime, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine
 
+import package
 
 Base = declarative_base()
 logger = logging.getLogger('adapter_db')
 
-class AdapterDb(Base):
 
-    __tablename__ = 'adapter_db'
+class Queue(Base):
+
+    __tablename__ = 'queue'
 
     package = Column(String, primary_key=True)
     scope = Column(String, nullable=False)
@@ -34,6 +37,33 @@ class AdapterDb(Base):
     datetime = Column(DateTime, nullable=False)
     dequeued = Column(Boolean, nullable=False, default=False)
 
+
+class QueueManager(object):
+
+    def __init__(self, queue='adapter_queue.sqlite'):
+        os.chdir('../db')
+        cwd = os.getcwd()
+        self.db_path = cwd + '/' + queue
+        db = 'sqlite:///' + self.db_path
+        engine = create_engine(db)
+        Base.metadata.create_all(engine)
+        Session = sessionmaker(bind=engine)
+        self.session = Session()
+
+    def delete_queue(self):
+        os.remove(self.db_path)
+
+    def add_event(self, event_package=None):
+        event = Queue(
+            package = event_package.get_package_str(),
+            scope = event_package.get_scope(),
+            identifier = event_package.get_identifier(),
+            revision = event_package.get_revision(),
+            datetime = event_package.get_datetime()
+        )
+
+        self.session.add(event)
+        self.session.commit()
 
 
 def main():
