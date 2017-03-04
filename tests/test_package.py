@@ -30,12 +30,12 @@ class TestPackage(unittest.TestCase):
     revision = 14
     datetime_str = '2017-02-23T13:09:29.166'
     datetime = datetime.strptime(datetime_str, '%Y-%m-%dT%H:%M:%S.%f')
-    event_str = 'createDataPackage'
+    method_str = 'createDataPackage'
 
     def setUp(self):
         self.package = Package(package_str=TestPackage.package_str,
                                datetime_str=TestPackage.datetime_str,
-                               event_str=TestPackage.event_str)
+                               method_str=TestPackage.method_str)
 
     def tearDown(self):
         pass
@@ -62,9 +62,9 @@ class TestPackage(unittest.TestCase):
         datetime_str = datetime.strftime('%Y-%m-%dT%H:%M:%S.%f').rstrip('0')
         self.assertEqual(TestPackage.datetime_str, datetime_str)
 
-    def test_get_event(self):
-        event_str = self.package.get_event_str()
-        self.assertEqual(TestPackage.event_str, event_str)
+    def test_get_method(self):
+        method_str = self.package.get_method()
+        self.assertEqual(TestPackage.method_str, method_str)
 
 
 if __name__ == '__main__':
