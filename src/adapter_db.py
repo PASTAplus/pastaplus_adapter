@@ -34,6 +34,7 @@ class Queue(Base):
     scope = Column(String, nullable=False)
     identifier = Column(Integer, nullable=False)
     revision = Column(Integer, nullable=False)
+    method = Column(String, primary_key=True)
     datetime = Column(DateTime, nullable=False)
     dequeued = Column(Boolean, nullable=False, default=False)
 
@@ -53,18 +54,30 @@ class QueueManager(object):
     def delete_queue(self):
         os.remove(self.db_path)
 
-    def add_event(self, event_package=None):
+    def enqueue(self, event_package=None):
         event = Queue(
             package = event_package.get_package_str(),
             scope = event_package.get_scope(),
             identifier = event_package.get_identifier(),
             revision = event_package.get_revision(),
+            method = event_package.get_method(),
             datetime = event_package.get_datetime()
         )
 
         self.session.add(event)
         self.session.commit()
 
+    def get_head(self):
+        pass
+
+    def get_all(self):
+        return self.session.query(Queue).all()
+
+    def dequeue(self, event_package=None):
+        pass
+
+    def get_last_event(self):
+        pass
 
 def main():
     return 0
