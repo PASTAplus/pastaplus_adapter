@@ -19,6 +19,7 @@ from sqlalchemy import Column, Integer, String, DateTime, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
+from sqlalchemy import desc
 
 import package
 
@@ -67,17 +68,21 @@ class QueueManager(object):
         self.session.add(event)
         self.session.commit()
 
+    def dequeue(self, event=None):
+        event.dequeued = True
+        self.session.commit()
+        return event
+
     def get_head(self):
-        pass
+        return self.session.query(Queue).filter(
+            Queue.dequeued == False).order_by(Queue.datetime).first()
 
     def get_all(self):
-        return self.session.query(Queue).all()
-
-    def dequeue(self, event_package=None):
-        pass
+        return self.session.query(Queue).order_by(Queue.datetime).all()
 
     def get_last_event(self):
-        pass
+        return self.session.query(Queue).order_by(desc(Queue.datetime)).first()
+
 
 def main():
     return 0
