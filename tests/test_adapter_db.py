@@ -32,36 +32,25 @@ class TestAdapterQueue(unittest.TestCase):
 
     def test_enqueue(self):
         self.qm.enqueue(event_package=self.packages[0])
-
-    def test_get_all(self):
-        self.enqueue_all()
-        queue = self.qm.get_all();
-        self.assertEqual(len(self.packages), len(queue))
-        for event in queue:
-            print event.package, event.method, event.datetime, event.dequeued
+        self.assertFalse(self.qm.dequeued(event_package=self.packages[0]))
 
     def test_get_head(self):
         self.enqueue_all()
-        event = self.qm.get_head()
-        print event.package, event.method, event.datetime, event.dequeued
+        package = self.qm.get_head()
+        self.assertEqual(self.packages[0].get_package_str(),
+                         package.get_package_str())
 
     def test_dequeue(self):
         self.enqueue_all()
+        package_head = self.qm.get_head()
+        self.qm.dequeue(event_package=package_head)
+        self.assertTrue(self.qm.dequeued(event_package=package_head))
 
-        queue = self.qm.get_all();
-        for event in queue:
-            print event.package, event.method, event.datetime, event.dequeued
-
-        head_event = self.qm.get_head()
-        event = self.qm.dequeue(event=head_event)
-        print event.package, event.method, event.datetime, event.dequeued
-
-        queue = self.qm.get_all();
-        for event in queue:
-            print event.package, event.method, event.datetime, event.dequeued
-
-        event = self.qm.get_head()
-        print event.package, event.method, event.datetime, event.dequeued
+    def test_get_last_datetime(self):
+        self.enqueue_all()
+        datetime_str = self.qm.get_last_datetime()
+        self.assertEqual(self.packages[5].get_datetime().strftime(
+            '%Y-%m-%dT%H:%M:%S.%f').rstrip('0'), datetime_str)
 
     def build_packages(self):
         package_str1 = 'knb-lter-nin.12.14'

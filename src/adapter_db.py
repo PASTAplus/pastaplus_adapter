@@ -21,7 +21,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 from sqlalchemy import desc
 
-import package
+from package import Package
 
 Base = declarative_base()
 logger = logging.getLogger('adapter_db')
@@ -64,25 +64,36 @@ class QueueManager(object):
             method = event_package.get_method(),
             datetime = event_package.get_datetime()
         )
-
         self.session.add(event)
         self.session.commit()
 
-    def dequeue(self, event=None):
+    def dequeue(self, event_package=None):
+        event = self.session.query(Queue).filter(
+            Queue.package==event_package.get_package_str(),
+            Queue.method==event_package.get_method()).one()
         event.dequeued = True
         self.session.commit()
-        return event
 
     def get_head(self):
-        return self.session.query(Queue).filter(
-            Queue.dequeued == False).order_by(Queue.datetime).first()
+        event = self.session.query(Queue).filter(
+            Queue.dequeued==False).order_by(Queue.datetime).first()
+        return _event_2_package(event=event)
 
-    def get_all(self):
-        return self.session.query(Queue).order_by(Queue.datetime).all()
+    def get_last_datetime(self):
+        event = self.session.query(Queue).order_by(desc(Queue.datetime)).first()
+        return event.datetime.strftime('%Y-%m-%dT%H:%M:%S.%f').rstrip('0')
 
-    def get_last_event(self):
-        return self.session.query(Queue).order_by(desc(Queue.datetime)).first()
+    def dequeued(self, event_package=None):
+        event = self.session.query(Queue).filter(
+            Queue.package==event_package.get_package_str(),
+            Queue.method==event_package.get_method()).one()
+        return event.dequeued
 
+
+def _event_2_package(event=None):
+        datetime_str = event.datetime.strftime('%Y-%m-%dT%H:%M:%S.%f').rstrip('0')
+        return Package(package_str=event.package, datetime_str=datetime_str,
+                       method_str=event.method)
 
 def main():
     return 0
