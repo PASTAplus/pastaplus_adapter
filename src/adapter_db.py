@@ -4,6 +4,8 @@
 """:Mod: adapter_db
 
 :Synopsis:
+    Database model to support queueing objects from PASTA for use by the
+    EDI PASTA Adapter and the EDI member node instance of the DataONE GMN.
  
 :Author:
     servilla
@@ -112,9 +114,14 @@ class QueueManager(object):
         return dequeued
 
 def _event_2_package(event=None):
-        datetime_str = event.datetime.strftime('%Y-%m-%dT%H:%M:%S.%f').rstrip('0')
-        return Package(package_str=event.package, datetime_str=datetime_str,
-                       method_str=event.method)
+    """Convert a database event record into a Package object.
+
+    :param event: -- the database event record
+    :return: -- the Package object
+    """
+    datetime_str = event.datetime.strftime('%Y-%m-%dT%H:%M:%S.%f').rstrip('0')
+    return Package(package_str=event.package, datetime_str=datetime_str,
+                   method_str=event.method)
 
 def main():
     return 0
