@@ -20,6 +20,8 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 from sqlalchemy import desc
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm.exc import NoResultFound
 
 from package import Package
 
@@ -64,31 +66,50 @@ class QueueManager(object):
             method = event_package.get_method(),
             datetime = event_package.get_datetime()
         )
-        self.session.add(event)
-        self.session.commit()
+        try:
+            self.session.add(event)
+            self.session.commit()
+        except IntegrityError as e:
+            logger.error(e)
+            self.session.rollback()
 
     def dequeue(self, event_package=None):
-        event = self.session.query(Queue).filter(
-            Queue.package==event_package.get_package_str(),
-            Queue.method==event_package.get_method()).one()
-        event.dequeued = True
-        self.session.commit()
+        try:
+            event = self.session.query(Queue).filter(
+                Queue.package==event_package.get_package_str(),
+                Queue.method==event_package.get_method()).one()
+            event.dequeued = True
+            self.session.commit()
+        except NoResultFound as e:
+            logger.error('{e} - {package_str}'.format(e=e,
+                                package_str=event_package.get_package_str()))
 
     def get_head(self):
+        package = None
         event = self.session.query(Queue).filter(
             Queue.dequeued==False).order_by(Queue.datetime).first()
-        return _event_2_package(event=event)
+        if event:
+            package = _event_2_package(event=event)
+        return package
 
     def get_last_datetime(self):
+        datetime = None
         event = self.session.query(Queue).order_by(desc(Queue.datetime)).first()
-        return event.datetime.strftime('%Y-%m-%dT%H:%M:%S.%f').rstrip('0')
+        if event:
+            datetime = event.datetime.strftime('%Y-%m-%dT%H:%M:%S.%f').rstrip('0')
+        return datetime
 
     def dequeued(self, event_package=None):
-        event = self.session.query(Queue).filter(
-            Queue.package==event_package.get_package_str(),
-            Queue.method==event_package.get_method()).one()
-        return event.dequeued
-
+        dequeued = None
+        try:
+            event = self.session.query(Queue).filter(
+                Queue.package==event_package.get_package_str(),
+                Queue.method==event_package.get_method()).one()
+            dequeued = event.dequeued
+        except NoResultFound as e:
+            logger.error('{e} - {package_str}'.format(e=e,
+                            package_str=event_package.get_package_str()))
+        return dequeued
 
 def _event_2_package(event=None):
         datetime_str = event.datetime.strftime('%Y-%m-%dT%H:%M:%S.%f').rstrip('0')
