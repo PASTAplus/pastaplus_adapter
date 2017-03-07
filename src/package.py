@@ -27,7 +27,14 @@ class Package(object):
        self.scope = self.package[0].strip()
        self.identifier = int(self.package[1])
        self.revision = int(self.package[2])
-       self.datetime = datetime.strptime(datetime_str, '%Y-%m-%dT%H:%M:%S.%f')
+
+       if 'T' in datetime_str:
+           self.datetime = datetime.strptime(datetime_str,
+                                             '%Y-%m-%dT%H:%M:%S.%f')
+       else:
+           self.datetime = datetime.strptime(datetime_str,
+                                             '%Y-%m-%d %H:%M:%S.%f')
+
        self.method = method_str.strip()
 
    def get_package_str(self):
