@@ -54,7 +54,7 @@ def parse(baseUrl=None, fromDate=None, toDate=None, scope=None):
 
     qm = QueueManager()
     tree = etree.parse(url)
-    for dataPackage in tree.getiterator('dataPackageUpload'):
+    for dataPackage in tree.getiterator('dataPackage'):
         packageId = dataPackage.find('./packageId')
         datetime = dataPackage.find('./date')
         method = dataPackage.find('./serviceMethod')
