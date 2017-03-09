@@ -24,13 +24,14 @@ logger = logging.getLogger('test_package')
 
 class TestPackage(unittest.TestCase):
 
-    package_str = 'knb-lter-nin.12.14'
+    package_str = 'knb-lter-nin.1.1'
     scope = 'knb-lter-nin'
-    identifier = 12
-    revision = 14
+    identifier = 1
+    revision = 11
     datetime_str = '2017-02-23T13:09:29.166'
     datetime = datetime.strptime(datetime_str, '%Y-%m-%dT%H:%M:%S.%f')
     method_str = 'createDataPackage'
+    url = 'http://pasta-d.lternet.edu/package/'
 
     def setUp(self):
         self.package = Package(package_str=TestPackage.package_str,
@@ -66,6 +67,9 @@ class TestPackage(unittest.TestCase):
         method_str = self.package.get_method()
         self.assertEqual(TestPackage.method_str, method_str)
 
+    def test_get_resource(self):
+        resources = self.package.get_resources(url=TestPackage.url)
+        print resources
 
 if __name__ == '__main__':
     unittest.main()
