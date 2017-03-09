@@ -15,7 +15,7 @@
 import unittest
 import logging
 
-from adapter_db import QueueManager
+from queue import QueueManager
 from package import Package
 
 logger = logging.getLogger('test_adapter_db')
