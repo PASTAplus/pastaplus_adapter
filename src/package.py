@@ -16,6 +16,12 @@ from datetime import datetime
 
 import logging
 
+import requests
+
+import adapter_utilities
+import properties
+
+
 logger = logging.getLogger('package')
 
 
@@ -55,6 +61,13 @@ class Package(object):
    def get_method(self):
        return self.method
 
+   def get_resources(self, url=None):
+       url = adapter_utilities.makeHttps(url=url) + \
+             'eml/' + self.get_scope() + '/' + \
+             str(self.get_identifier()) + '/' + str(self.get_revision())
+       r = requests.get(url, auth=(properties.GMN, properties.GMNPASSWD))
+       resources = r.text.split()
+       return resources
 
 def main():
     return 0
