@@ -44,7 +44,6 @@ def bootstrap():
 
 
 def parse(url=None, fromDate=None, toDate=None, scope=None):
-
     if fromDate:
         url = url + 'fromDate=' + fromDate + '&'
     if toDate:
@@ -73,7 +72,6 @@ def parse(url=None, fromDate=None, toDate=None, scope=None):
 
 
 def main():
-
     url = properties.BASE_URL + '/changes/eml?'
     qm = QueueManager()
 
