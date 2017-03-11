@@ -19,10 +19,19 @@ logging.basicConfig(format='%(asctime)s %(levelname)s (%(name)s): %(message)s',
 
 logger = logging.getLogger('properties.py')
 
-BASE_URL = 'http://pasta.lternet.edu/package/'
-GMN = 'uid=gmn-pasta,o=LTER,dc=ecoinformatics,dc=org'
-GMNPASSWD = 'GMN User Password'
+# URLs
+PASTA_URL = 'https://pasta.lternet.edu/package/'
+D1_BASE_URL = 'https://cn.dataone.org/cn'
 
+# User Credentials
+GMN = 'uid=gmn-pasta,o=LTER,dc=ecoinformatics,dc=org'
+GMNPASSWD = 'Secret Password'
+
+# Resource types
+PACKAGE = 'package'
+METADATA = 'metadata'
+DATA = 'data'
+REPORT = 'report'
 
 def main():
     return 0
