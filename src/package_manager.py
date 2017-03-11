@@ -26,23 +26,23 @@ logger = logging.getLogger('package_manager')
 
 
 def main():
-
     qm = QueueManager()
-    url = properties.BASE_URL
+    url = properties.PASTA_URL
+    formats = adapter_utilities.get_d1_formats()
 
     package = qm.get_head()
     while package:
-        logger.info('Processing: {p}'.format(p=package.get_package_str()))
-        resources = package.get_resources(url=url)
-        logger.info(resources)
-        # for each component:
-            # Build system metadata object
-        # Build ORE using DOI
-        # Determine if create or update
-        # Push to GMN
+        if  package.is_public(url=url):
+            logger.info('Processing: {p}'.format(p=package.get_package_str()))
+            resources = package.get_resources(url=url)
+            logger.info(resources)
+            # for each component:
+                # Build system metadata object
+            # Build ORE using DOI
+            # Determine if create or update
+            # Push to GMN
         qm.dequeue(event_package=package)
         package = qm.get_head()
-
 
     return 0
 
