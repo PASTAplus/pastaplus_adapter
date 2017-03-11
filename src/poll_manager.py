@@ -26,11 +26,11 @@ import properties
 logging.basicConfig(format='%(asctime)s %(levelname)s (%(name)s): %(message)s',
                     datefmt='%Y-%m-%d %H:%M:%S%z', level=logging.INFO)
 
-logger = logging.getLogger('parser')
+logger = logging.getLogger('poll_manager')
 
 
 def bootstrap():
-    url = properties.BASE_URL + '/changes/eml?'
+    url = properties.PASTA_URL + '/changes/eml?'
     now = datetime.now()
     fromDate = datetime.strptime('2013-01-01T00:00:00.00',
                                  '%Y-%m-%dT%H:%M:%S.%f')
@@ -72,7 +72,7 @@ def parse(url=None, fromDate=None, toDate=None, scope=None):
 
 
 def main():
-    url = properties.BASE_URL + '/changes/eml?'
+    url = properties.PASTA_URL + '/changes/eml?'
     qm = QueueManager()
 
     fromDate = qm.get_last_datetime()
