@@ -16,22 +16,22 @@ import unittest
 import logging
 from datetime import datetime
 
+import properties
 from package import Package
-
 
 logger = logging.getLogger('test_package')
 
 
 class TestPackage(unittest.TestCase):
-
     package_str = 'knb-lter-nin.1.1'
     scope = 'knb-lter-nin'
     identifier = 1
-    revision = 11
+    revision = 1
     datetime_str = '2017-02-23T13:09:29.166'
     datetime = datetime.strptime(datetime_str, '%Y-%m-%dT%H:%M:%S.%f')
     method_str = 'createDataPackage'
-    url = 'http://pasta-d.lternet.edu/package/'
+    doi = 'doi:10.6073/pasta/3bcc89b2d1a410b7a2c678e3c55055e1'
+    url = properties.PASTA_URL
 
     def setUp(self):
         self.package = Package(package_str=TestPackage.package_str,
@@ -43,19 +43,19 @@ class TestPackage(unittest.TestCase):
 
     def test_get_package(self):
         package = self.package.get_package_str()
-        self.assertEqual(TestPackage.package_str,package)
+        self.assertEqual(TestPackage.package_str, package)
 
     def test_get_scope(self):
         scope = self.package.get_scope()
-        self.assertEqual(TestPackage.scope,scope)
+        self.assertEqual(TestPackage.scope, scope)
 
     def test_get_identifier(self):
         identifier = self.package.get_identifier()
-        self.assertEqual(TestPackage.identifier,identifier)
+        self.assertEqual(TestPackage.identifier, identifier)
 
     def test_get_revision(self):
         revision = self.package.get_revision()
-        self.assertEqual(TestPackage.revision,revision)
+        self.assertEqual(TestPackage.revision, revision)
 
     def test_get_datetime(self):
         datetime = self.package.get_datetime()
@@ -67,9 +67,17 @@ class TestPackage(unittest.TestCase):
         method_str = self.package.get_method()
         self.assertEqual(TestPackage.method_str, method_str)
 
-    def test_get_resource(self):
+    def test_get_resources(self):
         resources = self.package.get_resources(url=TestPackage.url)
         print resources
+        self.assertEqual(4, len(resources))
+
+    def test_is_public(self):
+        self.assertTrue(self.package.is_public(url=TestPackage.url))
+
+    def test_get_doi(self):
+        self.assertEqual(TestPackage.doi, self.package.get_doi(url=TestPackage.url))
+
 
 if __name__ == '__main__':
     unittest.main()
