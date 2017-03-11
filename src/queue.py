@@ -32,7 +32,6 @@ logger = logging.getLogger('adapter_db')
 
 
 class Queue(Base):
-
     __tablename__ = 'queue'
 
     package = Column(String, primary_key=True)
@@ -45,7 +44,6 @@ class Queue(Base):
 
 
 class QueueManager(object):
-
     def __init__(self, queue='adapter_queue.sqlite'):
         os.chdir('../db')
         cwd = os.getcwd()
@@ -61,12 +59,12 @@ class QueueManager(object):
 
     def enqueue(self, event_package=None):
         event = Queue(
-            package = event_package.get_package_str(),
-            scope = event_package.get_scope(),
-            identifier = event_package.get_identifier(),
-            revision = event_package.get_revision(),
-            method = event_package.get_method(),
-            datetime = event_package.get_datetime()
+            package=event_package.get_package_str(),
+            scope=event_package.get_scope(),
+            identifier=event_package.get_identifier(),
+            revision=event_package.get_revision(),
+            method=event_package.get_method(),
+            datetime=event_package.get_datetime()
         )
         try:
             self.session.add(event)
@@ -78,18 +76,18 @@ class QueueManager(object):
     def dequeue(self, event_package=None):
         try:
             event = self.session.query(Queue).filter(
-                Queue.package==event_package.get_package_str(),
-                Queue.method==event_package.get_method()).one()
+                Queue.package == event_package.get_package_str(),
+                Queue.method == event_package.get_method()).one()
             event.dequeued = True
             self.session.commit()
         except NoResultFound as e:
             logger.error('{e} - {package_str}'.format(e=e,
-                                package_str=event_package.get_package_str()))
+                                                      package_str=event_package.get_package_str()))
 
     def get_head(self):
         package = None
         event = self.session.query(Queue).filter(
-            Queue.dequeued==False).order_by(Queue.datetime).first()
+            Queue.dequeued == False).order_by(Queue.datetime).first()
         if event:
             package = _event_2_package(event=event)
         return package
@@ -105,13 +103,14 @@ class QueueManager(object):
         dequeued = None
         try:
             event = self.session.query(Queue).filter(
-                Queue.package==event_package.get_package_str(),
-                Queue.method==event_package.get_method()).one()
+                Queue.package == event_package.get_package_str(),
+                Queue.method == event_package.get_method()).one()
             dequeued = event.dequeued
         except NoResultFound as e:
             logger.error('{e} - {package_str}'.format(e=e,
-                            package_str=event_package.get_package_str()))
+                                                      package_str=event_package.get_package_str()))
         return dequeued
+
 
 def _event_2_package(event=None):
     """Convert a database event record into a Package object.
@@ -122,6 +121,7 @@ def _event_2_package(event=None):
     datetime_str = event.datetime.strftime('%Y-%m-%dT%H:%M:%S.%f').rstrip('0')
     return Package(package_str=event.package, datetime_str=datetime_str,
                    method_str=event.method)
+
 
 def main():
     return 0
