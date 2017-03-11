@@ -13,61 +13,83 @@
 """
 
 from datetime import datetime
-
 import logging
 
 import requests
 
-import adapter_utilities
 import properties
-
+import adapter_utilities
+from resource import Resource
 
 logger = logging.getLogger('package')
 
 
 class Package(object):
+    def __init__(self, package_str=None, datetime_str=None, method_str=None):
+        self.package_str = package_str.strip()
+        self.package = self.package_str.split(".")
+        self.scope = self.package[0]
+        self.identifier = int(self.package[1])
+        self.revision = int(self.package[2])
+        self.package_path = self.package_str.replace('.', '/')
 
-   def __init__(self, package_str=None, datetime_str=None, method_str=None):
-       self.package_str = package_str.strip()
-       self.package = self.package_str.split(".")
-       self.scope = self.package[0].strip()
-       self.identifier = int(self.package[1])
-       self.revision = int(self.package[2])
+        if 'T' in datetime_str:
+            self.datetime = datetime.strptime(datetime_str,
+                                              '%Y-%m-%dT%H:%M:%S.%f')
+        else:
+            self.datetime = datetime.strptime(datetime_str,
+                                              '%Y-%m-%d %H:%M:%S.%f')
 
-       if 'T' in datetime_str:
-           self.datetime = datetime.strptime(datetime_str,
-                                             '%Y-%m-%dT%H:%M:%S.%f')
-       else:
-           self.datetime = datetime.strptime(datetime_str,
-                                             '%Y-%m-%d %H:%M:%S.%f')
+        self.method = method_str.strip()
 
-       self.method = method_str.strip()
+    def get_package_str(self):
+        return self.package_str
 
-   def get_package_str(self):
-       return self.package_str
+    def get_scope(self):
+        return self.scope
 
-   def get_scope(self):
-       return self.scope
+    def get_identifier(self):
+        return self.identifier
 
-   def get_identifier(self):
-       return self.identifier
+    def get_revision(self):
+        return self.revision
 
-   def get_revision(self):
-       return self.revision
+    def get_datetime(self):
+        return self.datetime
 
-   def get_datetime(self):
-       return self.datetime
+    def get_method(self):
+        return self.method
 
-   def get_method(self):
-       return self.method
+    def get_resources(self, url=None):
+        resources = []
+        url = url + 'eml/' + self.package_path
+        try:
+            r = requests.get(url=url)
+            if r.status_code == requests.codes.ok:
+                resources = r.text.split()
+        except Exception as e:
+            logger.error(e)
+        return resources
 
-   def get_resources(self, url=None):
-       url = adapter_utilities.makeHttps(url=url) + \
-             'eml/' + self.get_scope() + '/' + \
-             str(self.get_identifier()) + '/' + str(self.get_revision())
-       r = requests.get(url, auth=(properties.GMN, properties.GMNPASSWD))
-       resources = r.text.split()
-       return resources
+    def is_public(self, url=None):
+        resources = self.get_resources(url=url)
+        for resource in resources:
+            r = Resource(resource=resource)
+            if not r.is_public(url=url):
+                return False
+        return True
+
+    def get_doi(self, url=None):
+        doi = None
+        url = url + '/doi/eml/' + self.package_path
+        try:
+            r = requests.get(url=url)
+            if r.status_code == requests.codes.ok:
+                doi = r.text.strip()
+        except Exception as e:
+            logger.error(e)
+        return doi
+
 
 def main():
     return 0
