@@ -56,3 +56,4 @@ db
 archive
 *.log
 properties.py
+*.pkl
