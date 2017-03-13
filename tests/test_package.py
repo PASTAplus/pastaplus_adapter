@@ -31,7 +31,7 @@ class TestPackage(unittest.TestCase):
     datetime = datetime.strptime(datetime_str, '%Y-%m-%dT%H:%M:%S.%f')
     method_str = 'createDataPackage'
     doi = 'doi:10.6073/pasta/3bcc89b2d1a410b7a2c678e3c55055e1'
-    url = properties.PASTA_URL
+    url = properties.PASTA_BASE_URL
 
     def setUp(self):
         self.package = Package(package_str=TestPackage.package_str,
@@ -68,15 +68,15 @@ class TestPackage(unittest.TestCase):
         self.assertEqual(TestPackage.method_str, method_str)
 
     def test_get_resources(self):
-        resources = self.package.get_resources(url=TestPackage.url)
+        resources = self.package.get_resources()
         print resources
         self.assertEqual(4, len(resources))
 
     def test_is_public(self):
-        self.assertTrue(self.package.is_public(url=TestPackage.url))
+        self.assertTrue(self.package.is_public())
 
     def test_get_doi(self):
-        self.assertEqual(TestPackage.doi, self.package.get_doi(url=TestPackage.url))
+        self.assertEqual(TestPackage.doi, self.package.get_doi())
 
 
 if __name__ == '__main__':
