@@ -25,10 +25,10 @@ logging.basicConfig(format='%(asctime)s %(levelname)s (%(name)s): %(message)s',
 logger = logging.getLogger('adapter_utilities')
 
 
-def makeHttps(url=None):
+def make_https(url=None):
     return url.replace('http:', 'https:', 1)
 
-def makeHttp(url=None):
+def make_http(url=None):
     return url.replace('https:', 'http:', 1)
 
 
