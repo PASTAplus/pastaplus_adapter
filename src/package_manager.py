@@ -27,12 +27,12 @@ logger = logging.getLogger('package_manager')
 
 def main():
     qm = QueueManager()
-    url = properties.PASTA_URL
+    url = properties.PASTA_BASE_URL
     formats = adapter_utilities.get_d1_formats()
 
     package = qm.get_head()
     while package:
-        if  package.is_public(url=url):
+        if package.is_public():
             logger.info('Processing: {p}'.format(p=package.get_package_str()))
             resources = package.get_resources(url=url)
             logger.info(resources)
