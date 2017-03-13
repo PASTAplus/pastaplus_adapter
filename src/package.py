@@ -32,6 +32,8 @@ class Package(object):
         self.identifier = int(self.package[1])
         self.revision = int(self.package[2])
         self.package_path = self.package_str.replace('.', '/')
+        self.base_url = properties.PASTA_BASE_URL
+        self.resources = self._get_resources()
 
         if 'T' in datetime_str:
             self.datetime = datetime.strptime(datetime_str,
@@ -54,15 +56,18 @@ class Package(object):
     def get_revision(self):
         return self.revision
 
+    def get_resources(self):
+        return self.resources
+
     def get_datetime(self):
         return self.datetime
 
     def get_method(self):
         return self.method
 
-    def get_resources(self, url=None):
+    def _get_resources(self):
         resources = []
-        url = url + 'eml/' + self.package_path
+        url = self.base_url + 'eml/' + self.package_path
         try:
             r = requests.get(url=url)
             if r.status_code == requests.codes.ok:
@@ -71,17 +76,16 @@ class Package(object):
             logger.error(e)
         return resources
 
-    def is_public(self, url=None):
-        resources = self.get_resources(url=url)
-        for resource in resources:
+    def is_public(self):
+        for resource in self.resources:
             r = Resource(resource=resource)
-            if not r.is_public(url=url):
+            if not r.is_public():
                 return False
         return True
 
-    def get_doi(self, url=None):
+    def get_doi(self):
         doi = None
-        url = url + '/doi/eml/' + self.package_path
+        url = self.base_url + '/doi/eml/' + self.package_path
         try:
             r = requests.get(url=url)
             if r.status_code == requests.codes.ok:
