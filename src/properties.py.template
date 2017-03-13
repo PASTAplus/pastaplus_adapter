@@ -33,6 +33,11 @@ METADATA = 'metadata'
 DATA = 'data'
 REPORT = 'report'
 
+# PASTA environments
+PRODUCTION = 'pasta.lternet.edu'
+STAGING = 'pasta-s.lternet.edu'
+DEVELOPMENT = 'pasta-d.lternet.edu'
+
 def main():
     return 0
 
