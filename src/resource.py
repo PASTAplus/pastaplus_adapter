@@ -97,7 +97,7 @@ class Resource(object):
             'identifier': self.resource,
             'formatId': self._get_format(),
             'size': self._get_size(),
-            'checksum': {'value': None, 'algorithm': None},
+            'checksum': {'value': self._get_checksum(), 'algorithm': properties.CHECKSUM_ALGORITHM},
             'submitter': None,
             'rightsHolder': None,
             'accessPolicy': [], # e.g., {'subject': 'public', 'permission': 'read'}
@@ -138,6 +138,22 @@ class Resource(object):
             else:
                 format - 'application/octet-stream'
         return format
+
+    def _get_checksum(self):
+        checksum = None
+        if self.type == 'metadata':
+            r = requests.get(self.resource.replace('/metadata/eml/', '/metadata/checksum/eml/'))
+            checksum = r.text.strip()
+        elif self.type == 'report':
+            r = requests.get(self.resource.replace('/report/eml/', '/report/checksum/eml/'))
+            checksum = r.text.strip()
+        elif self.type == 'data':
+            r = requests.get(self.resource.replace('/data/eml/', '/data/checksum/eml/'))
+            checksum = r.text.strip()
+        return checksum
+
+
+
 
 def main():
     return 0
