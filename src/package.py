@@ -66,12 +66,19 @@ class Package(object):
         return self.method
 
     def _get_resources(self):
+        """Return the list data package resources without the reflexive package resource.
+
+        :return:
+        """
         resources = []
         url = self.base_url + 'eml/' + self.package_path
         try:
             r = requests.get(url=url)
             if r.status_code == requests.codes.ok:
                 resources = r.text.split()
+                for resource in resources:
+                    if 'package/eml' in resource:
+                        resources.remove(resource)
         except Exception as e:
             logger.error(e)
         return resources
