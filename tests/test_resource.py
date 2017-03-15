@@ -55,7 +55,6 @@ class TestResource(unittest.TestCase):
         for resource in resources:
             resource = Resource(resource=resource)
             sm = resource._build_system_metadata()
-            print sm['identifier']
         self.assertTrue(True)
 
 
