@@ -19,6 +19,7 @@ from package import Package
 import adapter_utilities
 import properties
 
+
 logging.basicConfig(format='%(asctime)s %(levelname)s (%(name)s): %(message)s',
                     datefmt='%Y-%m-%d %H:%M:%S%z', level=logging.INFO)
 

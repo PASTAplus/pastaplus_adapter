@@ -27,8 +27,10 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from package import Package
 
-Base = declarative_base()
+
 logger = logging.getLogger('adapter_db')
+
+Base = declarative_base()
 
 
 class Queue(Base):

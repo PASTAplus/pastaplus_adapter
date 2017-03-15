@@ -12,12 +12,13 @@
     3/2/17
 """
 
-import unittest
 import logging
+import unittest
 from datetime import datetime
 
 import properties
 from package import Package
+
 
 logger = logging.getLogger('test_package')
 

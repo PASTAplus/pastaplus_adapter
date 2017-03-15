@@ -12,14 +12,14 @@
     3/2/17
 """
 
-from datetime import datetime
 import logging
+from datetime import datetime
 
 import requests
 
 import properties
-import adapter_utilities
 from resource import Resource
+
 
 logger = logging.getLogger('package')
 

@@ -22,8 +22,6 @@ from d1_client.cnclient_2_0 import CoordinatingNodeClient_2_0
 
 import properties
 
-logging.basicConfig(format='%(asctime)s %(levelname)s (%(name)s): %(message)s',
-                    datefmt='%Y-%m-%d %H:%M:%S%z', level=logging.INFO)
 
 logger = logging.getLogger('adapter_utilities')
 
@@ -78,9 +76,7 @@ def _is_stale_file(filename=None, seconds=None):
     return is_stale
 
 
-
 def main():
-
     return 0
 
 

@@ -14,29 +14,31 @@
 
 import logging
 
-logging.basicConfig(format='%(asctime)s %(levelname)s (%(name)s): %(message)s',
-                    datefmt='%Y-%m-%d %H:%M:%S%z', level=logging.INFO)
 
 logger = logging.getLogger('properties.py')
 
 # URLs
-PASTA_URL = 'https://pasta.lternet.edu/package/'
-D1_BASE_URL = 'https://cn.dataone.org/cn'
+PASTA_BASE_URL = u'https://pasta-d.lternet.edu/package/'
+D1_BASE_URL = u'https://cn.dataone.org/cn'
 
 # User Credentials
-GMN = 'uid=gmn-pasta,o=LTER,dc=ecoinformatics,dc=org'
-GMNPASSWD = 'Secret Password'
+GMN_USER = u'uid=gmn-pasta,o=LTER,dc=ecoinformatics,dc=org'
+GMN_PASSWD = u'SECRET_PASSWORD'
 
 # Resource types
-PACKAGE = 'package'
-METADATA = 'metadata'
-DATA = 'data'
-REPORT = 'report'
+PACKAGE = u'package'
+METADATA = u'metadata'
+DATA = u'data'
+REPORT = u'report'
 
 # PASTA environments
-PRODUCTION = 'pasta.lternet.edu'
-STAGING = 'pasta-s.lternet.edu'
-DEVELOPMENT = 'pasta-d.lternet.edu'
+PRODUCTION = u'pasta.lternet.edu'
+STAGING = u'pasta-s.lternet.edu'
+DEVELOPMENT = u'pasta-d.lternet.edu'
+
+# Miscellaneous
+CHECKSUM_ALGORITHM = u'SHA-1'
+
 
 def main():
     return 0

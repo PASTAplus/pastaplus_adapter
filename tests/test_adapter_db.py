@@ -18,6 +18,7 @@ import logging
 from queue import QueueManager
 from package import Package
 
+
 logger = logging.getLogger('test_adapter_db')
 
 
