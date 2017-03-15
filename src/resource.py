@@ -12,20 +12,15 @@
     3/10/17
 """
 
-# Stdlib
 import logging
 import xml.etree.ElementTree as ET
 
-# 3rd party
 import requests
 
-# Application
 import properties
 import adapter_utilities
 
 
-logging.basicConfig(format='%(asctime)s %(levelname)s (%(name)s): %(message)s',
-                    datefmt='%Y-%m-%d %H:%M:%S%z', level=logging.INFO)
 logger = logging.getLogger('resource')
 
 
@@ -40,6 +35,17 @@ class Resource(object):
 
     def get_type(self):
         return self.type
+
+    def is_public(self):
+        """Determines if the resource is publicly accessible
+
+        :return: boolean
+        """
+        url = adapter_utilities.make_https(url=self.base_url) + \
+              'authz?resourceId=' + self.resource
+        r = requests.get(url)
+        logger.info('Authz: {url} - {status}'.format(url=url, status=r.status_code))
+        return r.status_code == requests.codes.ok
 
     def _get_base_url(self):
         base_url = None
@@ -62,17 +68,6 @@ class Resource(object):
         elif 'package/report' in self.resource:
             _type = 'report'
         return _type
-
-    def is_public(self):
-        """Determines if the resource is publicly accessible
-
-        :return: boolean
-        """
-        url = adapter_utilities.make_https(url=self.base_url) + \
-              'authz?resourceId=' + self.resource
-        r = requests.get(url)
-        logger.info('Authz: {url} - {status}'.format(url=url, status=r.status_code))
-        return r.status_code == requests.codes.ok
 
     def _get_resource_package_path(self):
         package_path = None
