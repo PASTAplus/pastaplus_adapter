@@ -15,13 +15,15 @@
 import logging
 from datetime import datetime
 from datetime import timedelta
+import xml.etree.ElementTree as ET
 
-from lxml import etree
+import requests
 
 from queue import QueueManager
 from package import Package
 import adapter_utilities
 import properties
+
 
 logging.basicConfig(format='%(asctime)s %(levelname)s (%(name)s): %(message)s',
                     datefmt='%Y-%m-%d %H:%M:%S%z', level=logging.INFO)
@@ -51,9 +53,11 @@ def parse(url=None, fromDate=None, toDate=None, scope=None):
     if scope:
         url = url + 'scope=' + scope
 
+    r = requests.get(url)
+
     qm = QueueManager()
-    tree = etree.parse(url)
-    for dataPackage in tree.getiterator('dataPackage'):
+    tree = ET.ElementTree(ET.fromstring(r.text.strip()))
+    for dataPackage in tree.iter('dataPackage'):
         packageId = dataPackage.find('./packageId')
         datetime = dataPackage.find('./date')
         method = dataPackage.find('./serviceMethod')
