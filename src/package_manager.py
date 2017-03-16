@@ -37,7 +37,7 @@ def main():
             logger.info('Processing: {p}'.format(p=package.get_package_str()))
             resources = package.get_resources(url=url)
             logger.info(resources)
-            # for each component:
+            # for each resource:
                 # Build system metadata object
             # Build ORE using DOI
             # Determine if create or update
