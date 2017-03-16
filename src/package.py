@@ -25,7 +25,7 @@ logger = logging.getLogger('package')
 
 
 class Package(object):
-    def __init__(self, package_str=None, datetime_str=None, method_str=None):
+    def __init__(self, package_str=None, datetime_str=None, method_str=None, owner_str=None):
         self.package_str = package_str.strip()
         self.package = self.package_str.split(".")
         self.scope = self.package[0]
@@ -43,6 +43,7 @@ class Package(object):
                                               '%Y-%m-%d %H:%M:%S.%f')
 
         self.method = method_str.strip()
+        self.owner = owner_str.strip()
 
     def get_package_str(self):
         return self.package_str
@@ -64,6 +65,9 @@ class Package(object):
 
     def get_method(self):
         return self.method
+
+    def get_owner(self):
+        return self.owner
 
     def _get_resources(self):
         """Return the list data package resources without the reflexive package resource.
