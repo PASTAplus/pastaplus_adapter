@@ -13,12 +13,15 @@
 """
 
 import logging
+
+logging.basicConfig(format='%(asctime)s %(levelname)s (%(name)s): %(message)s',
+                    datefmt='%Y-%m-%d %H:%M:%S%z', level=logging.INFO)
+
 import unittest
 from datetime import datetime
 
 import properties
 from package import Package
-
 
 logger = logging.getLogger('test_package')
 
