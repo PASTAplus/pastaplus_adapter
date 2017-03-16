@@ -20,7 +20,6 @@ import requests
 import properties
 import adapter_utilities
 
-
 logger = logging.getLogger('resource')
 
 
@@ -44,8 +43,12 @@ class Resource(object):
         url = adapter_utilities.make_https(url=self.base_url) + \
               'authz?resourceId=' + self.resource
         r = requests.get(url)
-        logger.info('Authz: {url} - {status}'.format(url=url, status=r.status_code))
+        logger.info(
+            'Authz: {url} - {status}'.format(url=url, status=r.status_code))
         return r.status_code == requests.codes.ok
+
+    def get_system_metadata(self, rights_holder=properties.DEFAULT_RIGHTS_HOLDER):
+        return self._build_system_metadata(rights_holder=rights_holder)
 
     def _get_base_url(self):
         base_url = None
@@ -58,16 +61,16 @@ class Resource(object):
         return base_url
 
     def _get_resource_type(self):
-        _type = None
+        resource_type = None
         if 'package/eml' in self.resource:
-            _type = 'package'
+            resource_type = 'package'
         elif 'package/metadata' in self.resource:
-            _type = 'metadata'
+            resource_type = 'metadata'
         elif 'package/data' in self.resource:
-            _type = 'data'
+            resource_type = 'data'
         elif 'package/report' in self.resource:
-            _type = 'report'
-        return _type
+            resource_type = 'report'
+        return resource_type
 
     def _get_resource_package_path(self):
         package_path = None
@@ -89,14 +92,16 @@ class Resource(object):
             data_name = self.resource.split('/')[-1]
         return data_name
 
-    def _build_system_metadata(self):
+    def _build_system_metadata(self, rights_holder=None):
         sysmeta = {
             'identifier': self.resource,
             'formatId': self._get_format(),
             'size': self._get_size(),
-            'checksum': {'value': self._get_checksum(), 'algorithm': properties.CHECKSUM_ALGORITHM},
-            'rightsHolder': None,
-            'accessPolicy': self._get_acl(),  # e.g., {'subject': 'public', 'permission': 'read'}
+            'checksum': {'value': self._get_checksum(),
+                         'algorithm': properties.CHECKSUM_ALGORITHM},
+            'rightsHolder': rights_holder,
+            'accessPolicy': self._get_acl(),
+        # e.g., {'subject': 'public', 'permission': 'read'}
             'replicationPolicy': {
                 'replicationAllowed': None,
                 'numberReplicas': None,
@@ -113,38 +118,43 @@ class Resource(object):
             r = requests.get(self.resource)
             size = r.headers['Content-Length']
         elif self.type == 'data':
-            r = requests.get(self.resource.replace('/data/eml/', '/data/size/eml/'))
+            r = requests.get(
+                self.resource.replace('/data/eml/', '/data/size/eml/'))
             size = r.text.strip()
         return int(size)
 
     def _get_format(self):
-        _format = None
+        format_type = None
         if self.type == 'metadata':
-            r = requests.get(self.resource.replace('/metadata/eml/', '/metadata/format/eml/'))
+            r = requests.get(self.resource.replace('/metadata/eml/',
+                                                   '/metadata/format/eml/'))
             eml_version = r.text.strip()
             if eml_version in self.d1_formats:
-                _format = self.d1_formats[eml_version].formatId
+                format_type = self.d1_formats[eml_version].formatId
         elif self.type == 'report':
-            _format = 'text/xml'
+            format_type = 'text/xml'
         elif self.type == 'data':
             r = requests.head(self.resource)
             content_type = r.headers['Content-Type']
             if content_type in self.d1_formats:
-                _format = self.d1_formats[content_type].formatId
+                format_type = self.d1_formats[content_type].formatId
             else:
-                _format = 'application/octet-stream'
-        return _format
+                format_type = 'application/octet-stream'
+        return format_type
 
     def _get_checksum(self):
         checksum = None
         if self.type == 'metadata':
-            r = requests.get(self.resource.replace('/metadata/eml/', '/metadata/checksum/eml/'))
+            r = requests.get(self.resource.replace('/metadata/eml/',
+                                                   '/metadata/checksum/eml/'))
             checksum = r.text.strip()
         elif self.type == 'report':
-            r = requests.get(self.resource.replace('/report/eml/', '/report/checksum/eml/'))
+            r = requests.get(
+                self.resource.replace('/report/eml/', '/report/checksum/eml/'))
             checksum = r.text.strip()
         elif self.type == 'data':
-            r = requests.get(self.resource.replace('/data/eml/', '/data/checksum/eml/'))
+            r = requests.get(
+                self.resource.replace('/data/eml/', '/data/checksum/eml/'))
             checksum = r.text.strip()
         return checksum
 
@@ -156,13 +166,19 @@ class Resource(object):
         auth = (properties.GMN_USER, properties.GMN_PASSWD)
         eml_acl = None
         if self.type == 'metadata':
-            r = requests.get(self.resource.replace('/metadata/eml/', '/metadata/acl/eml/'), auth=auth)
+            r = requests.get(
+                self.resource.replace('/metadata/eml/', '/metadata/acl/eml/'),
+                auth=auth)
             eml_acl = r.text.strip()
         elif self.type == 'report':
-            r = requests.get(self.resource.replace('/report/eml/', '/report/acl/eml/'), auth=auth)
+            r = requests.get(
+                self.resource.replace('/report/eml/', '/report/acl/eml/'),
+                auth=auth)
             eml_acl = r.text.strip()
         elif self.type == 'data':
-            r = requests.get(self.resource.replace('/data/eml/', '/data/acl/eml/'), auth=auth)
+            r = requests.get(
+                self.resource.replace('/data/eml/', '/data/acl/eml/'),
+                auth=auth)
             eml_acl = r.text.strip()
 
         tree = ET.ElementTree(ET.fromstring(eml_acl))
@@ -170,7 +186,8 @@ class Resource(object):
         for allow_rule in tree.iter('allow'):
             principal = allow_rule.find('./principal')
             permission = allow_rule.find('./permission')
-            acl.append({'principal': principal.text, 'permission': permission.text})
+            acl.append(
+                {'principal': principal.text, 'permission': permission.text})
         return acl
 
 
