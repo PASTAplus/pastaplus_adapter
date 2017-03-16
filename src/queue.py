@@ -42,6 +42,7 @@ class Queue(Base):
     revision = Column(Integer, nullable=False)
     method = Column(String, primary_key=True)
     datetime = Column(DateTime, nullable=False)
+    owner = Column(String, nullable=False)
     dequeued = Column(Boolean, nullable=False, default=False)
 
 
@@ -66,7 +67,8 @@ class QueueManager(object):
             identifier=event_package.get_identifier(),
             revision=event_package.get_revision(),
             method=event_package.get_method(),
-            datetime=event_package.get_datetime()
+            datetime=event_package.get_datetime(),
+            owner=event_package.get_owner()
         )
         try:
             self.session.add(event)
@@ -122,7 +124,7 @@ def _event_2_package(event=None):
     """
     datetime_str = event.datetime.strftime('%Y-%m-%dT%H:%M:%S.%f').rstrip('0')
     return Package(package_str=event.package, datetime_str=datetime_str,
-                   method_str=event.method)
+                   method_str=event.method, owner_str=event.owner)
 
 
 def main():
