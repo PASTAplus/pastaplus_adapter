@@ -12,14 +12,18 @@
     3/3/17
 """
 
-import unittest
 import logging
+
+logging.basicConfig(format='%(asctime)s %(levelname)s (%(name)s): %(message)s',
+                    datefmt='%Y-%m-%d %H:%M:%S%z', level=logging.INFO)
+
+import unittest
 
 from queue import QueueManager
 from package import Package
 
 
-logger = logging.getLogger('test_adapter_db')
+logger = logging.getLogger('test_queue')
 
 
 class TestAdapterQueue(unittest.TestCase):
