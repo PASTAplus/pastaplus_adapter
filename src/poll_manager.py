@@ -13,6 +13,10 @@
 """
 
 import logging
+
+logging.basicConfig(format='%(asctime)s %(levelname)s (%(name)s): %(message)s',
+                    datefmt='%Y-%m-%d %H:%M:%S%z', level=logging.INFO)
+
 from datetime import datetime
 from datetime import timedelta
 import xml.etree.ElementTree as ET
@@ -24,9 +28,6 @@ from package import Package
 import adapter_utilities
 import properties
 
-
-logging.basicConfig(format='%(asctime)s %(levelname)s (%(name)s): %(message)s',
-                    datefmt='%Y-%m-%d %H:%M:%S%z', level=logging.INFO)
 
 logger = logging.getLogger('poll_manager')
 
@@ -61,17 +62,18 @@ def parse(url=None, fromDate=None, toDate=None, scope=None):
         packageId = dataPackage.find('./packageId')
         datetime = dataPackage.find('./date')
         method = dataPackage.find('./serviceMethod')
+        owner = dataPackage.find('./principal')
         p = packageId.text
         d = datetime.text
         m = method.text
+        o = owner.text
 
         # Skip fromDate record(s) that already exist in queue
         if fromDate == datetime.text:
             logger.info('Skipping: {p} - {d} - {m}'.format(p=p, d=d, m=m))
         else:
             logger.info('Enqueue: {p} - {d} - {m}'.format(p=p, d=d, m=m))
-            package = Package(package_str=p, datetime_str=d,
-                              method_str=m)
+            package = Package(package_str=p, datetime_str=d, method_str=m, owner_str=o)
             qm.enqueue(event_package=package)
 
 
