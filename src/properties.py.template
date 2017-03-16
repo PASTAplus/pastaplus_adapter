@@ -18,7 +18,7 @@ import logging
 logger = logging.getLogger('properties.py')
 
 # URLs
-PASTA_BASE_URL = u'https://pasta-d.lternet.edu/package/'
+PASTA_BASE_URL = u'https://pasta.lternet.edu/package/'
 D1_BASE_URL = u'https://cn.dataone.org/cn'
 
 # User Credentials
@@ -38,6 +38,7 @@ DEVELOPMENT = u'pasta-d.lternet.edu'
 
 # Miscellaneous
 CHECKSUM_ALGORITHM = u'SHA-1'
+DEFAULT_RIGHTS_HOLDER = u'CN=PASTA-GMN,O=EDI,ST=New Mexico,C=US'
 
 
 def main():
