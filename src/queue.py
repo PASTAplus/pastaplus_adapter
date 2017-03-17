@@ -27,7 +27,6 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from package import Package
 
-
 logger = logging.getLogger('adapter_db')
 
 Base = declarative_base()
@@ -100,10 +99,11 @@ class QueueManager(object):
         datetime = None
         event = self.session.query(Queue).order_by(desc(Queue.datetime)).first()
         if event:
-            datetime = event.datetime.strftime('%Y-%m-%dT%H:%M:%S.%f').rstrip('0')
+            datetime = event.datetime.strftime('%Y-%m-%dT%H:%M:%S.%f').rstrip(
+                '0')
         return datetime
 
-    def dequeued(self, event_package=None):
+    def is_dequeued(self, event_package=None):
         dequeued = None
         try:
             event = self.session.query(Queue).filter(
@@ -115,6 +115,18 @@ class QueueManager(object):
                                                       package_str=event_package.get_package_str()))
         return dequeued
 
+    def get_predecessor(self, event_package=None):
+        predecessor = None
+        scope = event_package.get_scope()
+        identifier = event_package.get_identifier()
+        revision = event_package.get_revision()
+        event = self.session.query(Queue).filter(Queue.scope == scope,
+                    Queue.identifier == identifier,
+                    Queue.revision < revision).order_by(
+                    desc(Queue.revision)).first()
+        if event:
+            predecessor = _event_2_package(event=event)
+        return predecessor
 
 def _event_2_package(event=None):
     """Convert a database event record into a Package object.
