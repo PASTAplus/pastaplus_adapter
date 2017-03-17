@@ -16,6 +16,9 @@ import logging
 import xml.etree.ElementTree as ET
 
 import requests
+import d1_common.types.exceptions
+import d1_common.types.generated.dataoneTypes_v1 as dataoneTypes_v_1
+import d1_common.types.generated.dataoneTypes_v2_0 as dataoneTypes_v2_0
 
 import properties
 import adapter_utilities
@@ -47,8 +50,46 @@ class Resource(object):
             'Authz: {url} - {status}'.format(url=url, status=r.status_code))
         return r.status_code == requests.codes.ok
 
-    def get_system_metadata(self, rights_holder=properties.DEFAULT_RIGHTS_HOLDER):
-        return self._build_system_metadata(rights_holder=rights_holder)
+    def get_d1_system_metadata(self,
+                               rights_holder=properties.DEFAULT_RIGHTS_HOLDER):
+        """
+        Build the DataONE system metadata pyxb object from the local system
+        data structure. The 'rights holder' is passed in from the package
+        object and applies to all resources in the package.
+
+        :param rights_holder: Resource rights holder as string
+        :return: DataONE system metadata as pyxb object
+        """
+        local_sys_meta = self._build_system_metadata(
+            rights_holder=rights_holder)
+        d1_sys_meta = dataoneTypes_v2_0.systemMetadata()
+        d1_sys_meta.serialVersion = 1
+        d1_sys_meta.identifier = local_sys_meta['identifier']
+        d1_sys_meta.size = local_sys_meta['size']
+        d1_sys_meta.formatId = local_sys_meta['formatId']
+        d1_sys_meta.rightsHolder = local_sys_meta['rightsHolder']
+        d1_sys_meta.checksum = dataoneTypes_v_1.Checksum(
+            local_sys_meta['checksum']['value'])
+        d1_sys_meta.checksum.algorithm = local_sys_meta['checksum']['algorithm']
+        d1_sys_meta.accessPolicy = self._get_d1_access_policy(
+            acl_set=local_sys_meta['accessPolicy'])
+        return d1_sys_meta
+
+    def _get_d1_access_policy(self, acl_set=None):
+        """
+        Return a DataONE system metadata access policy object based on the
+        generated access policy found for the resource.
+
+        :param acl_set: Local resource access policy as a list
+        :return: DataONE access policy as pyxb object
+        """
+        accessPolicy = dataoneTypes_v_1.accessPolicy()
+        for acl in acl_set:
+            accessRule = dataoneTypes_v_1.AccessRule()
+            accessRule.subject.append(acl['principal'])
+            accessRule.permission.append(acl['permission'])
+            accessPolicy.append(accessRule)
+        return accessPolicy
 
     def _get_base_url(self):
         base_url = None
@@ -100,8 +141,8 @@ class Resource(object):
             'checksum': {'value': self._get_checksum(),
                          'algorithm': properties.CHECKSUM_ALGORITHM},
             'rightsHolder': rights_holder,
-            'accessPolicy': self._get_acl(),
-        # e.g., {'subject': 'public', 'permission': 'read'}
+            'accessPolicy': self._get_acl_set(),
+            # e.g., [{'subject': 'public', 'permission': 'read'}]
             'replicationPolicy': {
                 'replicationAllowed': None,
                 'numberReplicas': None,
@@ -158,7 +199,7 @@ class Resource(object):
             checksum = r.text.strip()
         return checksum
 
-    def _get_acl(self):
+    def _get_acl_set(self):
         """Return a list of EML access principals and permissions.
 
         :return: List of access principals and permissions
