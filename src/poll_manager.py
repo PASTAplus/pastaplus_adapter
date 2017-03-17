@@ -72,9 +72,10 @@ def parse(url=None, fromDate=None, toDate=None, scope=None):
         if fromDate == datetime.text:
             logger.info('Skipping: {p} - {d} - {m}'.format(p=p, d=d, m=m))
         else:
-            logger.info('Enqueue: {p} - {d} - {m}'.format(p=p, d=d, m=m))
             package = Package(package_str=p, datetime_str=d, method_str=m, owner_str=o)
-            qm.enqueue(event_package=package)
+            if package.get_scope() in properties.PASTA_WHITELIST:
+                logger.info('Enqueue: {p} - {d} - {m}'.format(p=p, d=d, m=m))
+                qm.enqueue(event_package=package)
 
 
 def main():
