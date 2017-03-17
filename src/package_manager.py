@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
+
 """:Mod: package_manager
 
 :Synopsis:
@@ -35,12 +37,18 @@ def main():
     while package:
         if package.is_public():
             logger.info('Processing: {p}'.format(p=package.get_package_str()))
-            resources = package.get_resources(url=url)
+            resources = package.get_resources()
             logger.info(resources)
             # for each resource:
                 # Build system metadata object
             # Build ORE using DOI
             # Determine if create or update
+            # lineage = [package.get_package_str()]
+            # predecessor = qm.get_predecessor(event_package=package)
+            # while predecessor:
+            #     lineage.append(predecessor.get_package_str())
+            #     predecessor = qm.get_predecessor(event_package=predecessor)
+            # print(lineage)
             # Push to GMN
         qm.dequeue(event_package=package)
         package = qm.get_head()
