@@ -55,11 +55,11 @@ class TestResource(unittest.TestCase):
     def test_build_system_metadata(self):
         resources = self.package.get_resources()
         for resource in resources:
-            resource = Resource(resource=resource)
-            sm = resource.get_system_metadata(
+            r = Resource(resource=resource)
+            d1_sys_meta = r.get_d1_system_metadata(
                 rights_holder=self.package.get_owner())
-            print(sm)
-        self.assertTrue(True)
+            self.assertEqual(resource, d1_sys_meta.identifier.value())
+            print(d1_sys_meta.toxml())
 
 
 if __name__ == '__main__':
