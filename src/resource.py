@@ -75,6 +75,9 @@ class Resource(object):
             acl_set=local_sys_meta['accessPolicy'])
         return d1_sys_meta
 
+    def get_vendor_specific_ext_header(self):
+        return {'VENDOR-GMN-REMOTE-URL': self.resource}
+
     def _get_d1_access_policy(self, acl_set=None):
         """
         Return a DataONE system metadata access policy object based on the
