@@ -18,10 +18,9 @@ import os.path
 from datetime import datetime
 from datetime import timedelta
 
-from d1_client.cnclient_2_0 import CoordinatingNodeClient_2_0
+import d1_client.cnclient_2_0
 
 import properties
-
 
 logger = logging.getLogger('adapter_utilities')
 
@@ -47,8 +46,9 @@ def get_d1_formats(url=properties.D1_BASE_URL):
     formats = {}
     if _is_stale_file(filename=formats_file, seconds=3600):
         try:
-            cn = CoordinatingNodeClient_2_0(base_url=url)
-            format_list = cn.listFormats()
+            cn_client = \
+                d1_client.cnclient_2_0.CoordinatingNodeClient_2_0(base_url=url)
+            format_list = cn_client.listFormats()
             for _format in format_list.objectFormat:
                 formats[_format.formatId] = _format
             fp = open(formats_file, 'wb')
@@ -67,7 +67,8 @@ def _is_stale_file(filename=None, seconds=None):
     is_stale = False
     try:
         mtime = os.path.getmtime(filename=filename)
-        delta = datetime.fromtimestamp(timestamp=mtime) + timedelta(seconds=seconds)
+        delta = datetime.fromtimestamp(timestamp=mtime) + \
+                timedelta(seconds=seconds)
         if delta < datetime.now():
             is_stale = True
     except OSError as e:
