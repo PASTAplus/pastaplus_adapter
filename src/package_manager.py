@@ -32,11 +32,11 @@ logging.basicConfig(format='%(asctime)s %(levelname)s (%(name)s): %(message)s',
 logger = logging.getLogger('package_manager')
 
 
-def _make_metadata_url(package_path=None):
+def make_metadata_url(package_path=None):
     return properties.PASTA_BASE_URL + 'metadata/eml/' + package_path
 
 
-def _make_package_url(package_path=None):
+def make_package_url(package_path=None):
     return properties.PASTA_BASE_URL + 'eml/' + package_path
 
 
@@ -63,6 +63,10 @@ def get_predecessor(queue_manager=None, package=None):
     return predecessor
 
 
+def is_metadata(resource=None):
+    return resource.get_type() == properties.METADATA
+
+
 def main():
     qm = QueueManager()
     package = qm.get_head()
@@ -74,19 +78,20 @@ def main():
             resources = package.get_resources()
             for resource in resources:
                 r = Resource(resource)
-                r_sys_meta = r.get_d1_system_metadata(
+                sysmeta = r.get_d1_system_metadata(
                     rights_holder=package.get_owner())
-                vse_header = r.get_vendor_specific_ext_header()
-                if predecessor and r.get_type() == properties.METADATA:
-                    old_pid = _make_metadata_url(predecessor.package_path)
-                    r_sys_meta.obsoletes = old_pid
+                header = r.get_vendor_specific_ext_header()
+                if predecessor and is_metadata(resource=r):
+                    old_pid = make_metadata_url(predecessor.package_path)
+                    sysmeta.obsoletes = old_pid
                     gmn_client.update(pid=old_pid, obj=StringIO.StringIO(),
-                                      newPid=resource, sysmeta=r_sys_meta,
-                                      vendorSpecific=vse_header)
+                                      newPid=resource, sysmeta=sysmeta,
+                                      vendorSpecific=header)
                 else:
                     gmn_client.create(pid=resource, obj=StringIO.StringIO(),
-                                      sysmeta=r_sys_meta,
-                                      vendorSpecific=vse_header)
+                                      sysmeta=sysmeta,
+                                      vendorSpecific=header)
+
                 # Build ORE using DOI
                     # Determine if create or update
                     # lineage = [package.get_package_str()]
