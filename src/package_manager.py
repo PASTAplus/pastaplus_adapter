@@ -40,13 +40,27 @@ def _make_package_url(package_path=None):
     return properties.PASTA_BASE_URL + 'eml/' + package_path
 
 
-def create_gmn_client(self):
+def create_gmn_client():
     return d1_client.mnclient_2_0.MemberNodeClient_2_0(
         base_url=properties.GMN_BASE_URL,
         cert_path=properties.GMN_CERT_PATH,
         key_path=properties.GMN_PRIVATE_KEY_PATH,
         timeout=properties.GMN_RESPONSE_TIMEOUT,
     )
+
+def get_predecessor(queue_manager=None, package=None):
+    """
+    Return first predecessor package that is publicly accessible (some
+    predecessors may exist in PASTA, but are not fully public)
+
+    :param queue_manager: queue manager instance for the adapter queue
+    :param package: the package instance being processed
+    :return: predecessor as a package instance or None if none found
+    """
+    predecessor = queue_manager.get_predecessor(event_package=package)
+    while predecessor and not predecessor.is_public():
+        predecessor = queue_manager.get_predecessor(event_package=predecessor)
+    return predecessor
 
 
 def main():
@@ -56,11 +70,7 @@ def main():
         if package.is_public():
             logger.info('Processing: {p}'.format(p=package.get_package_str()))
             gmn_client = create_gmn_client()
-
-            predecessor = qm.get_predecessor(event_package=package)
-            while not predecessor.is_public():
-                predecessor = qm.get_predecessor(event_package=predecessor)
-
+            predecessor = get_predecessor(queue_manager=qm, package=package)
             resources = package.get_resources()
             for resource in resources:
                 r = Resource(resource)
@@ -69,6 +79,7 @@ def main():
                 vse_header = r.get_vendor_specific_ext_header()
                 if predecessor and r.get_type() == properties.METADATA:
                     old_pid = _make_metadata_url(predecessor.package_path)
+                    r_sys_meta.obsoletes = old_pid
                     gmn_client.update(pid=old_pid, obj=StringIO.StringIO(),
                                       newPid=resource, sysmeta=r_sys_meta,
                                       vendorSpecific=vse_header)
