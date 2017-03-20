@@ -116,6 +116,12 @@ class QueueManager(object):
         return dequeued
 
     def get_predecessor(self, event_package=None):
+        """
+        Return the first predecessor of the event package
+
+        :param event_package: package instance of event package
+        :return: predecessor as package instance or None if none found
+        """
         predecessor = None
         scope = event_package.get_scope()
         identifier = event_package.get_identifier()
