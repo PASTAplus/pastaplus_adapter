@@ -34,13 +34,21 @@ class TestPackage(unittest.TestCase):
     datetime_str = '2017-02-23T13:09:29.166'
     datetime = datetime.strptime(datetime_str, '%Y-%m-%dT%H:%M:%S.%f')
     method_str = 'createDataPackage'
-    doi = 'doi:10.6073/pasta/3bcc89b2d1a410b7a2c678e3c55055e1'
+    owner_str = 'uid=LNO,o=LTER,dc=ecoinformatics,dc=org'
+    number_of_resources = 3
+
+    if 'pasta-d' in properties.PASTA_BASE_URL:
+        doi = 'doi:10.6073/pasta/3bcc89b2d1a410b7a2c678e3c55055e1'
+    else:
+        doi = 'doi:10.6073/pasta/b748a5ee923d9625fc86d0fcf6c02dd3'
+
     url = properties.PASTA_BASE_URL
 
     def setUp(self):
         self.package = Package(package_str=TestPackage.package_str,
                                datetime_str=TestPackage.datetime_str,
-                               method_str=TestPackage.method_str)
+                               method_str=TestPackage.method_str,
+                               owner_str=TestPackage.owner_str)
 
     def tearDown(self):
         pass
@@ -74,7 +82,7 @@ class TestPackage(unittest.TestCase):
     def test_get_resources(self):
         resources = self.package.get_resources()
         print resources
-        self.assertEqual(4, len(resources))
+        self.assertEqual(TestPackage.number_of_resources, len(resources))
 
     def test_is_public(self):
         self.assertTrue(self.package.is_public())
