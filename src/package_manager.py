@@ -15,6 +15,9 @@ from __future__ import print_function
 """
 
 import logging
+
+logging.basicConfig(format='%(asctime)s %(levelname)s (%(name)s): %(message)s',
+                    datefmt='%Y-%m-%d %H:%M:%S%z', level=logging.INFO)
 import StringIO
 
 import d1_common
@@ -26,8 +29,6 @@ from queue import QueueManager
 from resource import Resource
 import properties
 
-logging.basicConfig(format='%(asctime)s %(levelname)s (%(name)s): %(message)s',
-                    datefmt='%Y-%m-%d %H:%M:%S%z', level=logging.INFO)
 
 logger = logging.getLogger('package_manager')
 
@@ -76,6 +77,7 @@ def main():
             gmn_client = create_gmn_client()
             predecessor = get_predecessor(queue_manager=qm, package=package)
             resources = package.get_resources()
+            logger.info(resources)
             for resource in resources:
                 r = Resource(resource)
                 sysmeta = r.get_d1_system_metadata(
