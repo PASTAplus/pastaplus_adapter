@@ -70,9 +70,10 @@ class Package(object):
         return self.owner
 
     def _get_resources(self):
-        """Return the list data package resources without the reflexive package resource.
+        """
+        Return the list data package resources without the reflexive package resource.
 
-        :return:
+        :return: Resources as list of strings
         """
         resources = []
         url = self.base_url + 'eml/' + self.package_path
