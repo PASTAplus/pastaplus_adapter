@@ -107,23 +107,23 @@ class Resource(object):
     def _get_resource_type(self):
         resource_type = None
         if 'package/eml' in self.resource:
-            resource_type = 'package'
+            resource_type = properties.PACKAGE
         elif 'package/metadata' in self.resource:
-            resource_type = 'metadata'
+            resource_type = properties.METADATA
         elif 'package/data' in self.resource:
-            resource_type = 'data'
+            resource_type = properties.DATA
         elif 'package/report' in self.resource:
-            resource_type = 'report'
+            resource_type = properties.REPORT
         return resource_type
 
     def _get_resource_package_path(self):
         package_path = None
-        if self.type in ['metadata', 'report']:
+        if self.type in [properties.METADATA, properties.REPORT]:
             scope = self.resource.split('/')[-3]
             identifier = self.resource.split('/')[-2]
             revision = self.resource.split('/')[-1]
             package_path = scope + '/' + identifier + '/' + revision
-        elif self.type == 'data':
+        elif self.type == properties.DATA:
             scope = self.resource.split('/')[-4]
             identifier = self.resource.split('/')[-3]
             revision = self.resource.split('/')[-2]
@@ -132,7 +132,7 @@ class Resource(object):
 
     def _get_data_name(self):
         data_name = None
-        if self.type == 'data':
+        if self.type == properties.DATA:
             data_name = self.resource.split('/')[-1]
         return data_name
 
@@ -158,10 +158,10 @@ class Resource(object):
 
     def _get_size(self):
         size = None
-        if self.type in ['metadata', 'report']:
+        if self.type in [properties.METADATA, properties.REPORT]:
             r = requests.get(self.resource)
             size = r.headers['Content-Length']
-        elif self.type == 'data':
+        elif self.type == properties.DATA:
             r = requests.get(
                 self.resource.replace('/data/eml/', '/data/size/eml/'))
             size = r.text.strip()
@@ -169,16 +169,16 @@ class Resource(object):
 
     def _get_format(self):
         format_type = None
-        if self.type == 'metadata':
+        if self.type == properties.METADATA:
             r = requests.get(self.resource.replace('/metadata/eml/',
                                                    '/metadata/format/eml/'))
             eml_version = r.text.strip()
             if eml_version in self.d1_formats:
                 format_type = self.d1_formats[eml_version].formatId
-        elif self.type == 'report':
+        elif self.type == properties.REPORT:
             format_type = 'text/xml'
-        elif self.type == 'data':
-            r = requests.head(self.resource)
+        elif self.type == properties.DATA:
+            r = requests.head(self.resource, allow_redirects=True)
             content_type = r.headers['Content-Type']
             if content_type in self.d1_formats:
                 format_type = self.d1_formats[content_type].formatId
@@ -188,15 +188,15 @@ class Resource(object):
 
     def _get_checksum(self):
         checksum = None
-        if self.type == 'metadata':
+        if self.type == properties.METADATA:
             r = requests.get(self.resource.replace('/metadata/eml/',
                                                    '/metadata/checksum/eml/'))
             checksum = r.text.strip()
-        elif self.type == 'report':
+        elif self.type == properties.REPORT:
             r = requests.get(
                 self.resource.replace('/report/eml/', '/report/checksum/eml/'))
             checksum = r.text.strip()
-        elif self.type == 'data':
+        elif self.type == properties.DATA:
             r = requests.get(
                 self.resource.replace('/data/eml/', '/data/checksum/eml/'))
             checksum = r.text.strip()
@@ -209,17 +209,17 @@ class Resource(object):
         """
         auth = (properties.GMN_USER, properties.GMN_PASSWD)
         eml_acl = None
-        if self.type == 'metadata':
+        if self.type == properties.METADATA:
             r = requests.get(
                 self.resource.replace('/metadata/eml/', '/metadata/acl/eml/'),
                 auth=auth)
             eml_acl = r.text.strip()
-        elif self.type == 'report':
+        elif self.type == properties.REPORT:
             r = requests.get(
                 self.resource.replace('/report/eml/', '/report/acl/eml/'),
                 auth=auth)
             eml_acl = r.text.strip()
-        elif self.type == 'data':
+        elif self.type == properties.DATA:
             r = requests.get(
                 self.resource.replace('/data/eml/', '/data/acl/eml/'),
                 auth=auth)
