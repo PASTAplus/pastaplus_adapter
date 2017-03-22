@@ -32,7 +32,6 @@ class Package(object):
         self.identifier = int(self.package[1])
         self.revision = int(self.package[2])
         self.package_path = self.package_str.replace('.', '/')
-        self.base_url = properties.PASTA_BASE_URL
         self.resources = self._get_resources()
 
         if 'T' in datetime_str:
@@ -47,6 +46,9 @@ class Package(object):
 
     def get_package_str(self):
         return self.package_str
+
+    def get_package_purl(self):
+        return properties.PASTA_BASE_URL + 'eml/' + self.package_path
 
     def get_scope(self):
         return self.scope
@@ -76,7 +78,7 @@ class Package(object):
         :return: Resources as list of strings
         """
         resources = []
-        url = self.base_url + 'eml/' + self.package_path
+        url = properties.PASTA_BASE_URL + 'eml/' + self.package_path
         try:
             r = requests.get(url=url)
             if r.status_code == requests.codes.ok:
@@ -97,7 +99,7 @@ class Package(object):
 
     def get_doi(self):
         doi = None
-        url = self.base_url + '/doi/eml/' + self.package_path
+        url = properties.PASTA_BASE_URL + '/doi/eml/' + self.package_path
         try:
             r = requests.get(url=url)
             if r.status_code == requests.codes.ok:
