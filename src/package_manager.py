@@ -17,18 +17,17 @@ from __future__ import print_function
 import logging
 
 logging.basicConfig(format='%(asctime)s %(levelname)s (%(name)s): %(message)s',
-                    datefmt='%Y-%m-%d %H:%M:%S%z', level=logging.INFO)
+                    datefmt='%Y-%m-%d %H:%M:%S%z', level=logging.WARN)
 import StringIO
 
-import d1_common
 import d1_client.cnclient_2_0
 import d1_client.mnclient_2_0
 import d1_client.data_package
 
-from queue import QueueManager
+from queue_manager import QueueManager
 from resource import Resource
+from resource_map import ResourceMap
 import properties
-
 
 logger = logging.getLogger('package_manager')
 
@@ -48,6 +47,7 @@ def create_gmn_client():
         key_path=properties.GMN_PRIVATE_KEY_PATH,
         timeout=properties.GMN_RESPONSE_TIMEOUT,
     )
+
 
 def get_predecessor(queue_manager=None, package=None):
     """
@@ -73,36 +73,53 @@ def main():
     package = qm.get_head()
     while package:
         if package.is_public():
-            logger.info('Processing: {p}'.format(p=package.get_package_str()))
-            gmn_client = create_gmn_client()
-            predecessor = get_predecessor(queue_manager=qm, package=package)
-            resources = package.get_resources()
-            logger.info(resources)
-            for resource in resources:
-                r = Resource(resource)
-                sysmeta = r.get_d1_system_metadata(
-                    rights_holder=package.get_owner())
-                header = r.get_vendor_specific_ext_header()
-                if predecessor and is_metadata(resource=r):
-                    old_pid = make_metadata_url(predecessor.package_path)
+            logger.warn('Processing: {p}'.format(p=package.get_package_str()))
+            if package.get_method() in [properties.CREATE, properties.UPDATE]:
+                gmn_client = create_gmn_client()
+                predecessor = get_predecessor(queue_manager=qm, package=package)
+                resources = package.get_resources()
+                logger.warn(resources)
+                for resource in resources:
+                    r = Resource(resource)
+                    sysmeta = r.get_d1_system_metadata(
+                        rights_holder=package.get_owner())
+                    header = r.get_vendor_specific_ext_header()
+                    if predecessor and is_metadata(resource=r):
+                        old_pid = make_metadata_url(predecessor.package_path)
+                        sysmeta.obsoletes = old_pid
+                        logger.warn('Update: {}<-{}'.format(old_pid,resource))
+                        gmn_client.update(pid=old_pid, obj=StringIO.StringIO(),
+                                          newPid=resource, sysmeta=sysmeta,
+                                          vendorSpecific=header)
+                    else:
+                        logger.warn('Create: {}'.format(resource))
+                        gmn_client.create(pid=resource, obj=StringIO.StringIO(),
+                                          sysmeta=sysmeta,
+                                          vendorSpecific=header)
+                resource_map = ResourceMap(package=package)
+                sysmeta = resource_map.get_resource_map_system_metadata()
+                map = resource_map.get_resource_map()
+                resource_map_pid = resource_map.get_resource_map_pid()
+                if predecessor:
+                    predecessor_pid = predecessor.get_doi()
+                    if predecessor_pid is None:
+                        predecessor_pid = predecessor.get_package_purl()
+                    old_pid = predecessor_pid
                     sysmeta.obsoletes = old_pid
-                    gmn_client.update(pid=old_pid, obj=StringIO.StringIO(),
-                                      newPid=resource, sysmeta=sysmeta,
-                                      vendorSpecific=header)
+                    logger.warn('Update: {}<-{}'.format(old_pid,
+                                                        resource_map_pid))
+                    gmn_client.update(pid=old_pid,
+                                      obj=StringIO.StringIO(map),
+                                      newPid=resource_map_pid,
+                                      sysmeta=sysmeta)
                 else:
-                    gmn_client.create(pid=resource, obj=StringIO.StringIO(),
-                                      sysmeta=sysmeta,
-                                      vendorSpecific=header)
+                    logger.warn('Create: {}'.format(resource_map_pid))
+                    gmn_client.create(pid=resource_map_pid,
+                                      obj=StringIO.StringIO(map),
+                                      sysmeta=sysmeta)
 
-                # Build ORE using DOI
-                    # Determine if create or update
-                    # lineage = [package.get_package_str()]
-                    # predecessor = qm.get_predecessor(event_package=package)
-                    # while predecessor:
-                    #     lineage.append(predecessor.get_package_str())
-                    #     predecessor = qm.get_predecessor(event_package=predecessor)
-                    # print(lineage)
-                    # Push to GMN
+        else:  # deleteDataPackage
+            pass
         qm.dequeue(event_package=package)
         package = qm.get_head()
 
