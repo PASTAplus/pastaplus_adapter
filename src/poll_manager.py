@@ -23,7 +23,7 @@ import xml.etree.ElementTree as ET
 
 import requests
 
-from queue import QueueManager
+from queue_manager import QueueManager
 from package import Package
 import adapter_utilities
 import properties
