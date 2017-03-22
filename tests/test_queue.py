@@ -21,7 +21,7 @@ logging.basicConfig(format='%(asctime)s %(levelname)s (%(name)s): %(message)s',
 
 import unittest
 
-from queue import QueueManager
+from queue_manager import QueueManager
 from package import Package
 
 logger = logging.getLogger('test_queue')
