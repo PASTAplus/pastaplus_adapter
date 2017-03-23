@@ -35,20 +35,18 @@ class TestPackage(unittest.TestCase):
     datetime = datetime.strptime(datetime_str, '%Y-%m-%dT%H:%M:%S.%f')
     method_str = 'createDataPackage'
     owner_str = 'uid=LNO,o=LTER,dc=ecoinformatics,dc=org'
+    doi_str = 'doi:10.6073/pasta/3bcc89b2d1a410b7a2c678e3c55055e1'
     number_of_resources = 3
 
-    if 'pasta-d' in properties.PASTA_BASE_URL:
-        doi = 'doi:10.6073/pasta/3bcc89b2d1a410b7a2c678e3c55055e1'
-    else:
-        doi = 'doi:10.6073/pasta/b748a5ee923d9625fc86d0fcf6c02dd3'
-
+    doi = 'doi:10.6073/pasta/3bcc89b2d1a410b7a2c678e3c55055e1'
     url = properties.PASTA_BASE_URL
 
     def setUp(self):
         self.package = Package(package_str=TestPackage.package_str,
                                datetime_str=TestPackage.datetime_str,
                                method_str=TestPackage.method_str,
-                               owner_str=TestPackage.owner_str)
+                               owner_str=TestPackage.owner_str,
+                               doi_str=TestPackage.doi_str)
 
     def tearDown(self):
         pass
