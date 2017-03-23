@@ -16,6 +16,7 @@ from __future__ import print_function
 
 import logging
 
+# Set level to WARN to avoid verbosity in requests at INFO
 logging.basicConfig(format='%(asctime)s %(levelname)s (%(name)s): %(message)s',
                     datefmt='%Y-%m-%d %H:%M:%S%z', level=logging.WARN)
 import StringIO
@@ -73,9 +74,9 @@ def main():
     package = qm.get_head()
     while package:
         if package.is_public():
+            gmn_client = create_gmn_client()
             logger.warn('Processing: {p}'.format(p=package.get_package_str()))
             if package.get_method() in [properties.CREATE, properties.UPDATE]:
-                gmn_client = create_gmn_client()
                 predecessor = get_predecessor(queue_manager=qm, package=package)
                 resources = package.get_resources()
                 logger.warn(resources)
@@ -119,7 +120,17 @@ def main():
                                       sysmeta=sysmeta)
 
         else:  # deleteDataPackage
-            pass
+            resources = package.get_resources()
+            for resource in resources:
+                logger.warn('Delete: {}'.format(resource))
+                gmn_client.archive(pid=resource)
+                pass
+            pid = package.get_doi()
+            if pid is None:
+                pid = package.get_package_purl()
+            logger.warn('Delete: {}'.format(pid))
+            gmn_client.archive(pid=pid)
+
         qm.dequeue(event_package=package)
         package = qm.get_head()
 
