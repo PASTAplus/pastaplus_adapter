@@ -15,7 +15,7 @@
 import logging
 
 logging.basicConfig(format='%(asctime)s %(levelname)s (%(name)s): %(message)s',
-                    datefmt='%Y-%m-%d %H:%M:%S%z', level=logging.INFO)
+                    datefmt='%Y-%m-%d %H:%M:%S%z', level=logging.WARN)
 
 from datetime import datetime
 from datetime import timedelta
@@ -41,7 +41,7 @@ def bootstrap():
         toDate = fromDate + timedelta(days=1)
         fromDate_str = fromDate.strftime('%Y-%m-%dT%H:%M:%S.%f')
         toDate_str = toDate.strftime('%Y-%m-%dT%H:%M:%S.%f')
-        logger.info('from: {f} -- to: {t}'.format(f=fromDate_str, t=toDate_str))
+        logger.warn('from: {f} -- to: {t}'.format(f=fromDate_str, t=toDate_str))
         parse(url=url, fromDate=fromDate_str, toDate=toDate_str)
         fromDate = toDate
 
@@ -54,28 +54,41 @@ def parse(url=None, fromDate=None, toDate=None, scope=None):
     if scope:
         url = url + 'scope=' + scope
 
-    r = requests.get(url)
+    try:
+        r = requests.get(url)
+    except requests.exceptions.RequestException as e:
+        logger.error(e)
+        return None
 
-    qm = QueueManager()
-    tree = ET.ElementTree(ET.fromstring(r.text.strip()))
-    for dataPackage in tree.iter('dataPackage'):
-        packageId = dataPackage.find('./packageId')
-        datetime = dataPackage.find('./date')
-        method = dataPackage.find('./serviceMethod')
-        owner = dataPackage.find('./principal')
-        p = packageId.text
-        d = datetime.text
-        m = method.text
-        o = owner.text
+    if r.status_code == requests.codes.ok:
+        qm = QueueManager()
+        tree = ET.ElementTree(ET.fromstring(r.text.strip()))
+        for dataPackage in tree.iter('dataPackage'):
+            packageId = dataPackage.find('./packageId')
+            datetime = dataPackage.find('./date')
+            method = dataPackage.find('./serviceMethod')
+            owner = dataPackage.find('./principal')
+            doi = dataPackage.find('./doi')
+            p = packageId.text
+            d = datetime.text
+            m = method.text
+            o = owner.text
+            i = doi.text
 
-        # Skip fromDate record(s) that already exist in queue
-        if fromDate == datetime.text:
-            logger.info('Skipping: {p} - {d} - {m}'.format(p=p, d=d, m=m))
-        else:
-            package = Package(package_str=p, datetime_str=d, method_str=m, owner_str=o)
-            if package.get_scope() in properties.PASTA_WHITELIST:
-                logger.info('Enqueue: {p} - {d} - {m}'.format(p=p, d=d, m=m))
-                qm.enqueue(event_package=package)
+            # Skip fromDate record(s) that already exist in queue
+            if fromDate == datetime.text:
+                logger.warn('Skipping: {p} - {d} - {m} - {i}'.format(p=p, d=d,
+                                                                     m=m, i=i))
+            else:
+                package = Package(package_str=p, datetime_str=d, method_str=m,
+                                  owner_str=o, doi_str=i)
+                if package.get_scope() in properties.PASTA_WHITELIST:
+                    logger.warn('Enqueue: {p} - {d} - {m} - {i}'.format(p=p, d=d,
+                                                                      m=m, i=i))
+                    qm.enqueue(event_package=package)
+    else:
+        logger.warn('Bad status code ({code}) for {url}'.format(
+            code=r.status_code, url=url))
 
 
 def main():
