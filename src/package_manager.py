@@ -88,18 +88,27 @@ def main():
                     if predecessor and is_metadata(resource=r):
                         old_pid = make_metadata_url(predecessor.package_path)
                         sysmeta.obsoletes = old_pid
-                        logger.warn('Update: {}<-{}'.format(old_pid,resource))
-                        gmn_client.update(pid=old_pid, obj=StringIO.StringIO(),
-                                          newPid=resource, sysmeta=sysmeta,
-                                          vendorSpecific=header)
+                        logger.warn('Update: {}<-{}'.format(old_pid, resource))
+                        try:
+                            gmn_client.update(pid=old_pid,
+                                              obj=StringIO.StringIO(),
+                                              newPid=resource,
+                                              sysmeta=sysmeta,
+                                              vendorSpecific=header)
+                        except Exception as e:
+                            logger.error(e)
                     else:
                         logger.warn('Create: {}'.format(resource))
-                        gmn_client.create(pid=resource, obj=StringIO.StringIO(),
-                                          sysmeta=sysmeta,
-                                          vendorSpecific=header)
+                        try:
+                            gmn_client.create(pid=resource,
+                                              obj=StringIO.StringIO(),
+                                              sysmeta=sysmeta,
+                                              vendorSpecific=header)
+                        except Exception as e:
+                            logger.error(e)
                 resource_map = ResourceMap(package=package)
                 sysmeta = resource_map.get_resource_map_system_metadata()
-                map = resource_map.get_resource_map()
+                rmap = resource_map.get_resource_map()
                 resource_map_pid = resource_map.get_resource_map_pid()
                 if predecessor:
                     predecessor_pid = predecessor.get_doi()
@@ -109,27 +118,36 @@ def main():
                     sysmeta.obsoletes = old_pid
                     logger.warn('Update: {}<-{}'.format(old_pid,
                                                         resource_map_pid))
-                    gmn_client.update(pid=old_pid,
-                                      obj=StringIO.StringIO(map),
-                                      newPid=resource_map_pid,
-                                      sysmeta=sysmeta)
+                    try:
+                        gmn_client.update(pid=old_pid,
+                                          obj=StringIO.StringIO(rmap),
+                                          newPid=resource_map_pid,
+                                          sysmeta=sysmeta)
+                    except Exception as e:
+                        logger.error(e)
                 else:
                     logger.warn('Create: {}'.format(resource_map_pid))
-                    gmn_client.create(pid=resource_map_pid,
-                                      obj=StringIO.StringIO(map),
-                                      sysmeta=sysmeta)
+                    try:
+                        gmn_client.create(pid=resource_map_pid,
+                                          obj=StringIO.StringIO(rmap),
+                                          sysmeta=sysmeta)
+                    except Exception as e:
+                        logger.error(e)
 
-        else:  # deleteDataPackage
-            resources = package.get_resources()
-            for resource in resources:
-                logger.warn('Delete: {}'.format(resource))
-                gmn_client.archive(pid=resource)
-                pass
-            pid = package.get_doi()
-            if pid is None:
-                pid = package.get_package_purl()
-            logger.warn('Delete: {}'.format(pid))
-            gmn_client.archive(pid=pid)
+            else:  # deleteDataPackage
+                resources = package.get_resources()
+                for resource in resources:
+                    logger.warn('Delete: {}'.format(resource))
+                    try:
+                        gmn_client.archive(pid=resource)
+                    except Exception as e:
+                        logger.error(e)
+                pid = package.get_doi()
+                logger.warn('Delete: {}'.format(pid))
+                try:
+                    gmn_client.archive(pid=pid)
+                except Exception as e:
+                    logger.error(e)
 
         qm.dequeue(event_package=package)
         package = qm.get_head()
