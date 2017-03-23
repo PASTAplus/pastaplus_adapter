@@ -25,7 +25,8 @@ logger = logging.getLogger('package')
 
 
 class Package(object):
-    def __init__(self, package_str=None, datetime_str=None, method_str=None, owner_str=None):
+    def __init__(self, package_str=None, datetime_str=None, method_str=None,
+                 owner_str=None, doi_str=None):
         self.package_str = package_str.strip()
         self.package = self.package_str.split(".")
         self.scope = self.package[0]
@@ -43,6 +44,12 @@ class Package(object):
 
         self.method = method_str.strip()
         self.owner = owner_str.strip()
+
+        if doi_str is None:
+            self.doi = self.get_package_purl()
+        else:
+            self.doi = doi_str.strip()
+
 
     def get_package_str(self):
         return self.package_str
@@ -71,6 +78,9 @@ class Package(object):
     def get_owner(self):
         return self.owner
 
+    def get_doi(self):
+        return self.doi
+
     def _get_resources(self):
         """
         Return the list data package resources without the reflexive package resource.
@@ -96,17 +106,6 @@ class Package(object):
             if not r.is_public():
                 return False
         return True
-
-    def get_doi(self):
-        doi = None
-        url = properties.PASTA_BASE_URL + '/doi/eml/' + self.package_path
-        try:
-            r = requests.get(url=url)
-            if r.status_code == requests.codes.ok:
-                doi = r.text.strip()
-        except Exception as e:
-            logger.error(e)
-        return doi
 
 
 def main():
