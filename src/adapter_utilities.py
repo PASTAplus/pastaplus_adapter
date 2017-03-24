@@ -42,7 +42,7 @@ def get_d1_formats(url=properties.D1_BASE_URL):
     :param url: D1 base url
     :return: dict of D1 formats as pyxb format object
     """
-    formats_file = '../cache/formats.pkl'
+    formats_file = os.path.abspath('../cache/formats.pkl')
     formats = {}
     if _is_stale_file(filename=formats_file, seconds=3600):
         try:
