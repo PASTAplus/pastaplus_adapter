@@ -18,7 +18,9 @@ import logging
 
 # Set level to WARN to avoid verbosity in requests at INFO
 logging.basicConfig(format='%(asctime)s %(levelname)s (%(name)s): %(message)s',
-                    datefmt='%Y-%m-%d %H:%M:%S%z', level=logging.WARN)
+                    datefmt='%Y-%m-%d %H:%M:%S%z',
+                    filename='package_manager' + '.log',
+                    level=logging.WARN)
 import StringIO
 
 import d1_client.cnclient_2_0
@@ -44,8 +46,8 @@ def make_package_url(package_path=None):
 def create_gmn_client():
     return d1_client.mnclient_2_0.MemberNodeClient_2_0(
         base_url=properties.GMN_BASE_URL,
-        cert_path=properties.GMN_CERT_PATH,
-        key_path=properties.GMN_PRIVATE_KEY_PATH,
+        cert_pem_path=properties.GMN_CERT_PATH,
+        cert_key_path=properties.GMN_PRIVATE_KEY_PATH,
         timeout=properties.GMN_RESPONSE_TIMEOUT,
     )
 
@@ -72,14 +74,15 @@ def is_metadata(resource=None):
 def main():
     qm = QueueManager()
     package = qm.get_head()
+    gmn_client = create_gmn_client()
     while package:
+        logger.warn('Active package: {p}'.format(p=package.get_package_str()))
         if package.is_public():
-            gmn_client = create_gmn_client()
             logger.warn('Processing: {p}'.format(p=package.get_package_str()))
             if package.get_method() in [properties.CREATE, properties.UPDATE]:
                 predecessor = get_predecessor(queue_manager=qm, package=package)
                 resources = package.get_resources()
-                logger.warn(resources)
+                logger.info(resources)
                 for resource in resources:
                     r = Resource(resource)
                     sysmeta = r.get_d1_system_metadata(
@@ -93,7 +96,7 @@ def main():
                             gmn_client.update(pid=old_pid,
                                               obj=StringIO.StringIO(),
                                               newPid=resource,
-                                              sysmeta=sysmeta,
+                                              sysmeta_pyxb=sysmeta,
                                               vendorSpecific=header)
                         except Exception as e:
                             logger.error(e)
@@ -102,7 +105,7 @@ def main():
                         try:
                             gmn_client.create(pid=resource,
                                               obj=StringIO.StringIO(),
-                                              sysmeta=sysmeta,
+                                              sysmeta_pyxb=sysmeta,
                                               vendorSpecific=header)
                         except Exception as e:
                             logger.error(e)
@@ -122,7 +125,7 @@ def main():
                         gmn_client.update(pid=old_pid,
                                           obj=StringIO.StringIO(rmap),
                                           newPid=resource_map_pid,
-                                          sysmeta=sysmeta)
+                                          sysmeta_pyxb=sysmeta)
                     except Exception as e:
                         logger.error(e)
                 else:
@@ -130,7 +133,7 @@ def main():
                     try:
                         gmn_client.create(pid=resource_map_pid,
                                           obj=StringIO.StringIO(rmap),
-                                          sysmeta=sysmeta)
+                                          sysmeta_pyxb=sysmeta)
                     except Exception as e:
                         logger.error(e)
 
@@ -148,7 +151,9 @@ def main():
                     gmn_client.archive(pid=pid)
                 except Exception as e:
                     logger.error(e)
-
+        else:
+            logger.warn('Package {p} is not public'.format(
+                p=package.get_package_str()))
         qm.dequeue(event_package=package)
         package = qm.get_head()
 
