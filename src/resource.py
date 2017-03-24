@@ -50,8 +50,8 @@ class Resource(object):
             'Authz: {url} - {status}'.format(url=url, status=r.status_code))
         return r.status_code == requests.codes.ok
 
-    def get_d1_system_metadata(self,
-                               rights_holder=properties.DEFAULT_RIGHTS_HOLDER):
+    def get_d1_sysmeta(self,
+                       rights_holder=properties.DEFAULT_RIGHTS_HOLDER):
         """
         Build the DataONE system metadata pyxb object from the local system
         data structure. The 'rights holder' is passed in from the package
@@ -75,7 +75,7 @@ class Resource(object):
             acl_set=local_sys_meta['accessPolicy'])
         return d1_sys_meta
 
-    def get_vendor_specific_ext_header(self):
+    def get_vendorSpecific_header(self):
         return {'VENDOR-GMN-REMOTE-URL': self.resource}
 
     def _get_d1_access_policy(self, acl_set=None):
