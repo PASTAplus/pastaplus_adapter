@@ -56,10 +56,10 @@ class TestResource(unittest.TestCase):
         resources = self.package.get_resources()
         for resource in resources:
             r = Resource(resource=resource)
-            d1_sys_meta = r.get_d1_system_metadata(
+            sysmeta = r.get_d1_sysmeta(
                 rights_holder=self.package.get_owner())
-            self.assertEqual(resource, d1_sys_meta.identifier.value())
-            print(d1_sys_meta.toxml())
+            self.assertEqual(resource, sysmeta.identifier.value())
+            print(sysmeta.toxml())
 
 
 if __name__ == '__main__':

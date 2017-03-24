@@ -14,12 +14,13 @@ from __future__ import print_function
     3/8/17
 """
 
+import os
 import logging
 
 # Set level to WARN to avoid verbosity in requests at INFO
 logging.basicConfig(format='%(asctime)s %(levelname)s (%(name)s): %(message)s',
                     datefmt='%Y-%m-%d %H:%M:%S%z',
-                    filename='../log/package_manager.log',
+                    filename=os.path.abspath('../log/package_manager.log'),
                     level=logging.WARN)
 import StringIO
 
@@ -85,11 +86,12 @@ def main():
                 logger.info(resources)
                 for resource in resources:
                     r = Resource(resource)
-                    sysmeta = r.get_d1_system_metadata(
+                    sysmeta = r.get_d1_sysmeta(
                         rights_holder=package.get_owner())
-                    header = r.get_vendor_specific_ext_header()
+                    header = r.get_vendorSpecific_header()
                     if predecessor and is_metadata(resource=r):
-                        old_pid = make_metadata_url(predecessor.package_path)
+                        old_pid = make_metadata_url(
+                            predecessor.package_path)
                         sysmeta.obsoletes = old_pid
                         logger.warn('Update: {}<-{}'.format(old_pid, resource))
                         try:
