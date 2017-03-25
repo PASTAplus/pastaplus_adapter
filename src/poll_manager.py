@@ -47,6 +47,15 @@ def bootstrap():
 
 
 def parse(url=None, fromDate=None, toDate=None, scope=None):
+    """
+    Parse the PASTA list of changes XML based on the query parameters provided
+     
+    :param url: changes URL as a String
+    :param fromDate: fromDate as a date formatted String '%Y-%m-%dT%H:%M:%S.%f'
+    :param toDate: toDate as a data formatted String '%Y-%m-%dT%H:%M:%S.%f'
+    :param scope: scope filter value (only one) as a String
+    :return: 0 if successful, 1 otherwise
+    """
     if fromDate:
         url = url + 'fromDate=' + fromDate + '&'
     if toDate:
@@ -58,7 +67,7 @@ def parse(url=None, fromDate=None, toDate=None, scope=None):
         r = requests.get(url)
     except requests.exceptions.RequestException as e:
         logger.error(e)
-        return None
+        return 1
 
     if r.status_code == requests.codes.ok:
         qm = QueueManager()
@@ -82,13 +91,18 @@ def parse(url=None, fromDate=None, toDate=None, scope=None):
             else:
                 package = Package(package_str=p, datetime_str=d, method_str=m,
                                   owner_str=o, doi_str=i)
+                # Provide additional filter for multiple scope values
                 if package.get_scope() in properties.PASTA_WHITELIST:
                     logger.warn('Enqueue: {p} - {d} - {m} - {i}'.format(p=p, d=d,
                                                                       m=m, i=i))
                     qm.enqueue(event_package=package)
+                else:
+                    logger.info('Package {p} out of scope'.format(p=p))
+        return 0
     else:
         logger.warn('Bad status code ({code}) for {url}'.format(
             code=r.status_code, url=url))
+        return 1
 
 
 def main():
