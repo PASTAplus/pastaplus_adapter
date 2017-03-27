@@ -46,7 +46,7 @@ def bootstrap():
         fromDate = toDate
 
 
-def parse(url=None, fromDate=None, toDate=None, scope=None):
+def parse(url=None, fromDate=None, toDate=None, scope=properties.SCOPE):
     """
     Parse the PASTA list of changes XML based on the query parameters provided
      
