@@ -53,6 +53,10 @@ PASTA_WHITELIST = {'edi'}
 GMN_RESPONSE_TIMEOUT = 3 * 60
 SCOPE = u'edi'
 
+# Files
+QUEUE = u'adapter_queue.sqlite'
+FORMATS = u'formats.pkl'
+
 def main():
     return 0
 
