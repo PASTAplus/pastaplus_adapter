@@ -19,9 +19,7 @@ import logging
 
 # Set level to WARN to avoid verbosity in requests at INFO
 logging.basicConfig(format='%(asctime)s %(levelname)s (%(name)s): %(message)s',
-                    datefmt='%Y-%m-%d %H:%M:%S%z',
-                    filename=os.path.abspath('../log/package_manager.log'),
-                    level=logging.WARN)
+                    datefmt='%Y-%m-%d %H:%M:%S%z', level=logging.WARN)
 import StringIO
 
 import d1_client.cnclient_2_0
