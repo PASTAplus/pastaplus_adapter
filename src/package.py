@@ -96,7 +96,10 @@ class Package(object):
                 for resource in resources:
                     if 'package/eml' in resource:
                         resources.remove(resource)
-        except Exception as e:
+        except (requests.exceptions.RequestException,
+                requests.exceptions.BaseHTTPError,
+                requests.exceptions.HTTPError,
+                requests.exceptions.ConnectionError) as e:
             logger.error(e)
         return resources
 
