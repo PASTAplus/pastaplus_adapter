@@ -89,20 +89,29 @@ class ResourceMap(object):
         """
         auth = (properties.GMN_USER, properties.GMN_PASSWD)
         eml_acl = None
+        acl = None
 
-        r = requests.get(
-            self.package.get_package_purl().replace('/eml/', '/acl/eml/'),
-            auth=auth)
-        eml_acl = r.text.strip()
+        try:
+            r = requests.get(
+                self.package.get_package_purl().replace('/eml/', '/acl/eml/'),
+                auth=auth)
+            if r.status_code == requests.codes.ok:
+                eml_acl = r.text.strip()
+        except (requests.exceptions.RequestException,
+                requests.exceptions.BaseHTTPError,
+                requests.exceptions.HTTPError,
+                requests.exceptions.ConnectionError) as e:
+            logger.error(e)
 
-        tree = ET.ElementTree(ET.fromstring(eml_acl))
-        acl = []
-        for allow_rule in tree.iter('allow'):
-            principal = allow_rule.find('./principal')
-            permission = allow_rule.find('./permission')
-            acl.append(
-                {'principal': principal.text, 'permission': permission.text})
-        return acl
+        if eml_acl is not None:
+            tree = ET.ElementTree(ET.fromstring(eml_acl))
+            acl = []
+            for allow_rule in tree.iter('allow'):
+                principal = allow_rule.find('./principal')
+                permission = allow_rule.find('./permission')
+                acl.append(
+                    {'principal': principal.text, 'permission': permission.text})
+            return acl
 
     def _get_d1_access_policy(self, acl_set=None):
         """
