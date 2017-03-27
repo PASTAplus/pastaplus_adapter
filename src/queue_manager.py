@@ -26,6 +26,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
 
 from package import Package
+import properties
 
 logger = logging.getLogger('adapter_db')
 
@@ -47,11 +48,8 @@ class Queue(Base):
 
 
 class QueueManager(object):
-    def __init__(self, queue='adapter_queue.sqlite'):
-        os.chdir('../db')
-        cwd = os.getcwd()
-        self.db_path = cwd + '/' + queue
-        db = 'sqlite:///' + self.db_path
+    def __init__(self, queue=properties.QUEUE):
+        db = 'sqlite:///' + queue
         engine = create_engine(db)
         Base.metadata.create_all(engine)
         Session = sessionmaker(bind=engine)
