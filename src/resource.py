@@ -45,10 +45,12 @@ class Resource(object):
         """
         url = adapter_utilities.make_https(url=self.base_url) + \
               'authz?resourceId=' + self.resource
-        r = requests.get(url)
-        logger.info(
-            'Authz: {url} - {status}'.format(url=url, status=r.status_code))
-        return r.status_code == requests.codes.ok
+        r = self._requests_get_wrapped(url=url)
+        status = None
+        if r is not None:
+            logger.info('Authz: {u} - {s}'.format(u=url, s=r.status_code))
+            status = r.status_code == requests.codes.ok
+        return status
 
     def get_d1_sysmeta(self,
                        rights_holder=properties.DEFAULT_RIGHTS_HOLDER):
@@ -159,47 +161,65 @@ class Resource(object):
     def _get_size(self):
         size = None
         if self.type in [properties.METADATA, properties.REPORT]:
-            r = requests.get(self.resource)
-            size = r.headers['Content-Length']
+            url = self.resource
+            r = self._requests_get_wrapped(url=url)
+            if r is not None:
+                size = r.headers['Content-Length']
         elif self.type == properties.DATA:
-            r = requests.get(
-                self.resource.replace('/data/eml/', '/data/size/eml/'))
-            size = r.text.strip()
-        return int(size)
+            url = self.resource.replace('/data/eml/', '/data/size/eml/')
+            r = self._requests_get_wrapped(url=url)
+            if r is not None:
+                size = r.text.strip()
+        if size is not None:
+            size = int(size)
+        return size
 
     def _get_format(self):
         format_type = None
         if self.type == properties.METADATA:
-            r = requests.get(self.resource.replace('/metadata/eml/',
-                                                   '/metadata/format/eml/'))
-            eml_version = r.text.strip()
-            if eml_version in self.d1_formats:
-                format_type = self.d1_formats[eml_version].formatId
+            url = self.resource.replace('/metadata/eml/',
+                                        '/metadata/format/eml/')
+            r = self._requests_get_wrapped(url=url)
+            if r is not None:
+                eml_version = r.text.strip()
+                if eml_version in self.d1_formats:
+                    format_type = self.d1_formats[eml_version].formatId
         elif self.type == properties.REPORT:
             format_type = 'text/xml'
         elif self.type == properties.DATA:
-            r = requests.head(self.resource, allow_redirects=True)
-            content_type = r.headers['Content-Type']
-            if content_type in self.d1_formats:
-                format_type = self.d1_formats[content_type].formatId
-            else:
-                format_type = 'application/octet-stream'
+            try:
+                r = requests.head(self.resource, allow_redirects=True)
+                if r.status_code == requests.codes.ok:
+                    content_type = r.headers['Content-Type']
+                    if content_type in self.d1_formats:
+                        format_type = self.d1_formats[content_type].formatId
+                    else:
+                        format_type = 'application/octet-stream'
+            except (requests.exceptions.RequestException,
+                    requests.exceptions.BaseHTTPError,
+                    requests.exceptions.HTTPError,
+                    requests.exceptions.ConnectionError) as e:
+                logger.error(e)
         return format_type
 
     def _get_checksum(self):
         checksum = None
         if self.type == properties.METADATA:
-            r = requests.get(self.resource.replace('/metadata/eml/',
-                                                   '/metadata/checksum/eml/'))
-            checksum = r.text.strip()
+            url = self.resource.replace('/metadata/eml/',
+                                        '/metadata/checksum/eml/')
+            r = self._requests_get_wrapped(url=url)
+            if r is not None:
+                checksum = r.text.strip()
         elif self.type == properties.REPORT:
-            r = requests.get(
-                self.resource.replace('/report/eml/', '/report/checksum/eml/'))
-            checksum = r.text.strip()
+            url = self.resource.replace('/report/eml/', '/report/checksum/eml/')
+            r = self._requests_get_wrapped(url=url)
+            if r is not None:
+                checksum = r.text.strip()
         elif self.type == properties.DATA:
-            r = requests.get(
-                self.resource.replace('/data/eml/', '/data/checksum/eml/'))
-            checksum = r.text.strip()
+            url = self.resource.replace('/data/eml/', '/data/checksum/eml/')
+            r = self._requests_get_wrapped(url=url)
+            if r is not None:
+                checksum = r.text.strip()
         return checksum
 
     def _get_acl_set(self):
@@ -210,29 +230,48 @@ class Resource(object):
         auth = (properties.GMN_USER, properties.GMN_PASSWD)
         eml_acl = None
         if self.type == properties.METADATA:
-            r = requests.get(
-                self.resource.replace('/metadata/eml/', '/metadata/acl/eml/'),
-                auth=auth)
-            eml_acl = r.text.strip()
+            url = self.resource.replace('/metadata/eml/', '/metadata/acl/eml/')
+            r = self._requests_get_wrapped(url=url, auth=auth)
+            if r is not None:
+                eml_acl = r.text.strip()
         elif self.type == properties.REPORT:
-            r = requests.get(
-                self.resource.replace('/report/eml/', '/report/acl/eml/'),
-                auth=auth)
-            eml_acl = r.text.strip()
+            url = self.resource.replace('/report/eml/', '/report/acl/eml/')
+            r = self._requests_get_wrapped(url=url, auth=auth)
+            if r is not None:
+                eml_acl = r.text.strip()
         elif self.type == properties.DATA:
-            r = requests.get(
-                self.resource.replace('/data/eml/', '/data/acl/eml/'),
-                auth=auth)
-            eml_acl = r.text.strip()
+            url = self.resource.replace('/data/eml/', '/data/acl/eml/')
+            r = self._requests_get_wrapped(url=url, auth=auth)
+            if r is not None:
+                eml_acl = r.text.strip()
 
-        tree = ET.ElementTree(ET.fromstring(eml_acl))
-        acl = []
-        for allow_rule in tree.iter('allow'):
-            principal = allow_rule.find('./principal')
-            permission = allow_rule.find('./permission')
-            acl.append(
-                {'principal': principal.text, 'permission': permission.text})
+        acl = None
+        if eml_acl is not None:
+            tree = ET.ElementTree(ET.fromstring(eml_acl))
+            acl = []
+            for allow_rule in tree.iter('allow'):
+                principal = allow_rule.find('./principal')
+                permission = allow_rule.find('./permission')
+                acl.append(
+                    {'principal': principal.text,
+                     'permission': permission.text})
+
         return acl
+
+    def _requests_get_wrapped(self, url=None, auth=None):
+        r = None
+        try:
+            r = requests.get(url=url, auth=auth)
+            if r.status_code != requests.codes.ok:
+                logger.error('Bad status code ({code}) for {url}'.format(
+                    code=r.status_code, url=url))
+                r = None
+        except (requests.exceptions.RequestException,
+                requests.exceptions.BaseHTTPError,
+                requests.exceptions.HTTPError,
+                requests.exceptions.ConnectionError) as e:
+            logger.error(e)
+        return r
 
 
 def main():
