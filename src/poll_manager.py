@@ -65,7 +65,10 @@ def parse(url=None, fromDate=None, toDate=None, scope=None):
 
     try:
         r = requests.get(url)
-    except requests.exceptions.RequestException as e:
+    except (requests.exceptions.RequestException,
+            requests.exceptions.BaseHTTPError,
+            requests.exceptions.HTTPError,
+            requests.exceptions.ConnectionError) as e:
         logger.error(e)
         return 1
 
