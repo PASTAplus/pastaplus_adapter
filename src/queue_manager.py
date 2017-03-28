@@ -56,7 +56,7 @@ class QueueManager(object):
         self.session = Session()
 
     def delete_queue(self):
-        os.remove(self.db_path)
+        os.remove(properties.QUEUE)
 
     def enqueue(self, event_package=None):
         event = Queue(
