@@ -157,6 +157,7 @@ def main():
         qm.dequeue(event_package=package)
         package = qm.get_head()
 
+    logger.warn('Queue empty')
     return 0
 
 
