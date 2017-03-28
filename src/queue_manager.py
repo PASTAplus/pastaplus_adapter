@@ -49,14 +49,15 @@ class Queue(Base):
 
 class QueueManager(object):
     def __init__(self, queue=properties.QUEUE):
-        db = 'sqlite:///' + queue
+        self.queue = queue
+        db = 'sqlite:///' + self.queue
         engine = create_engine(db)
         Base.metadata.create_all(engine)
         Session = sessionmaker(bind=engine)
         self.session = Session()
 
     def delete_queue(self):
-        os.remove(properties.QUEUE)
+        os.remove(self.queue)
 
     def enqueue(self, event_package=None):
         event = Queue(
