@@ -25,7 +25,7 @@ import requests
 
 from queue_manager import QueueManager
 from package import Package
-import adapter_utilities
+from lock import Lock
 import properties
 
 
@@ -109,6 +109,14 @@ def parse(url=None, fromDate=None, toDate=None, scope=properties.SCOPE):
 
 
 def main():
+
+    lock = Lock('/tmp/poll_manager.lock')
+    if lock.locked:
+        logger.error('Lock file {} exists, exiting...'.format(lock.lock_file))
+        return 1
+    else:
+        lock.acquire()
+
     url = properties.PASTA_BASE_URL + '/changes/eml?'
     qm = QueueManager()
 
@@ -118,6 +126,7 @@ def main():
     else:
         parse(url=url, fromDate=fromDate)
 
+    lock.release()
     return 0
 
 

@@ -29,6 +29,7 @@ import d1_client.data_package
 from queue_manager import QueueManager
 from resource import Resource
 from resource_map import ResourceMap
+from lock import Lock
 import properties
 
 logger = logging.getLogger('package_manager')
@@ -71,6 +72,14 @@ def is_metadata(resource=None):
 
 
 def main():
+
+    lock = Lock('/tmp/package_manager.lock')
+    if lock.locked:
+        logger.error('Lock file {} exists, exiting...'.format(lock.lock_file))
+        return 1
+    else:
+        lock.acquire()
+
     qm = QueueManager()
     package = qm.get_head()
     gmn_client = create_gmn_client()
@@ -158,6 +167,7 @@ def main():
         package = qm.get_head()
 
     logger.warn('Queue empty')
+    lock.release()
     return 0
 
 
