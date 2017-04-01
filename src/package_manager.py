@@ -79,6 +79,7 @@ def main():
         return 1
     else:
         lock.acquire()
+        logger.warn('Lock file {} acquired'.format(lock.lock_file))
 
     qm = QueueManager()
     package = qm.get_head()
@@ -168,6 +169,7 @@ def main():
 
     logger.warn('Queue empty')
     lock.release()
+    logger.warn('Lock file {} released'.format(lock.lock_file))
     return 0
 
 

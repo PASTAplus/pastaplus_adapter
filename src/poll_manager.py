@@ -116,6 +116,7 @@ def main():
         return 1
     else:
         lock.acquire()
+        logger.warn('Lock file {} acquired'.format(lock.lock_file))
 
     url = properties.PASTA_BASE_URL + '/changes/eml?'
     qm = QueueManager()
@@ -127,6 +128,7 @@ def main():
         parse(url=url, fromDate=fromDate)
 
     lock.release()
+    logger.warn('Lock file {} released'.format(lock.lock_file))
     return 0
 
 
