@@ -94,8 +94,7 @@ def main():
                 logger.info(resources)
                 for resource in resources:
                     r = Resource(resource)
-                    sysmeta = r.get_d1_sysmeta(
-                        rights_holder=package.get_owner())
+                    sysmeta = r.get_d1_sysmeta()
                     header = r.get_vendorSpecific_header()
                     if predecessor and is_metadata(resource=r):
                         old_pid = make_metadata_url(

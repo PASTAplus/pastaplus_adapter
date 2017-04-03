@@ -75,7 +75,7 @@ class ResourceMap(object):
         d1_sys_meta.identifier = self.pid
         d1_sys_meta.size = len(self.resource_map)
         d1_sys_meta.formatId = 'http://www.openarchives.org/ore/terms'
-        d1_sys_meta.rightsHolder = self.package.get_owner()
+        d1_sys_meta.rightsHolder = properties.DEFAULT_RIGHTS_HOLDER
         d1_sys_meta.checksum = d1_common.checksum.create_checksum_object(
             self.resource_map)
         d1_sys_meta.accessPolicy = self._get_d1_access_policy(
