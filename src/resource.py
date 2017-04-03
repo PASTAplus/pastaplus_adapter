@@ -52,8 +52,7 @@ class Resource(object):
             status = r.status_code == requests.codes.ok
         return status
 
-    def get_d1_sysmeta(self,
-                       rights_holder=properties.DEFAULT_RIGHTS_HOLDER):
+    def get_d1_sysmeta(self, rights_holder=properties.DEFAULT_RIGHTS_HOLDER):
         """
         Build the DataONE system metadata pyxb object from the local system
         data structure. The 'rights holder' is passed in from the package
