@@ -39,13 +39,14 @@ class ResourceMap(object):
             self.pid = self.package.get_package_purl()
         self.metadata_pid, self.resource_pids = self._build_package_pids()
         self.resource_map = self._generate_resource_map()
-        self.system_metadata = self._build_system_metadata()
 
     def get_resource_map(self):
         return self.resource_map
 
-    def get_resource_map_system_metadata(self):
-        return self.system_metadata
+    def get_resource_map_system_metadata(self, principal_owner=None):
+        system_metadata = self._build_system_metadata(
+            principal_owner=principal_owner)
+        return system_metadata
 
     def get_resource_map_pid(self):
         return self.pid
@@ -69,7 +70,8 @@ class ResourceMap(object):
             resource_map_pid=self.pid, science_metadata_pid=self.metadata_pid,
             science_data_pids=self.resource_pids)
 
-    def _build_system_metadata(self):
+    def _build_system_metadata(self, principal_owner=None):
+        acl_set = self._get_package_acl_set(principal_owner=principal_owner)
         d1_sys_meta = dataoneTypes_v2_0.systemMetadata()
         d1_sys_meta.serialVersion = 1
         d1_sys_meta.identifier = self.pid
@@ -78,11 +80,10 @@ class ResourceMap(object):
         d1_sys_meta.rightsHolder = properties.DEFAULT_RIGHTS_HOLDER
         d1_sys_meta.checksum = d1_common.checksum.create_checksum_object(
             self.resource_map)
-        d1_sys_meta.accessPolicy = self._get_d1_access_policy(
-            acl_set=self._get_package_acl_set())
+        d1_sys_meta.accessPolicy = self._get_d1_access_policy(acl_set=acl_set)
         return d1_sys_meta
 
-    def _get_package_acl_set(self):
+    def _get_package_acl_set(self, principal_owner=None):
         """Return a list of EML access principals and permissions.
 
         :return: List of access principals and permissions
@@ -110,7 +111,13 @@ class ResourceMap(object):
                 principal = allow_rule.find('./principal')
                 permission = allow_rule.find('./permission')
                 acl.append(
-                    {'principal': principal.text, 'permission': permission.text})
+                    {'principal': principal.text,
+                     'permission': permission.text})
+
+            if principal_owner is not None:
+                acl.append({'principal': principal_owner,
+                            'permission': 'changePermission'})
+
             return acl
 
     def _get_d1_access_policy(self, acl_set=None):
@@ -128,7 +135,6 @@ class ResourceMap(object):
             accessRule.permission.append(acl['permission'])
             accessPolicy.append(accessRule)
         return accessPolicy
-
 
 
 def main():

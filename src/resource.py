@@ -52,7 +52,7 @@ class Resource(object):
             status = r.status_code == requests.codes.ok
         return status
 
-    def get_d1_sysmeta(self, rights_holder=properties.DEFAULT_RIGHTS_HOLDER):
+    def get_d1_sysmeta(self, principal_owner=None):
         """
         Build the DataONE system metadata pyxb object from the local system
         data structure. The 'rights holder' is passed in from the package
@@ -62,7 +62,7 @@ class Resource(object):
         :return: DataONE system metadata as pyxb object
         """
         local_sys_meta = self._build_system_metadata(
-            rights_holder=rights_holder)
+            principal_owner=principal_owner)
         d1_sys_meta = dataoneTypes_v2_0.systemMetadata()
         d1_sys_meta.serialVersion = 1
         d1_sys_meta.identifier = local_sys_meta['identifier']
@@ -137,15 +137,15 @@ class Resource(object):
             data_name = self.resource.split('/')[-1]
         return data_name
 
-    def _build_system_metadata(self, rights_holder=None):
+    def _build_system_metadata(self, principal_owner=None):
         sysmeta = {
             'identifier': self.resource,
             'formatId': self._get_format(),
             'size': self._get_size(),
             'checksum': {'value': self._get_checksum(),
                          'algorithm': properties.CHECKSUM_ALGORITHM},
-            'rightsHolder': rights_holder,
-            'accessPolicy': self._get_acl_set(),
+            'rightsHolder': properties.DEFAULT_RIGHTS_HOLDER,
+            'accessPolicy': self._get_acl_set(principal_owner=principal_owner),
             # e.g., [{'subject': 'public', 'permission': 'read'}]
             'replicationPolicy': {
                 'replicationAllowed': None,
@@ -221,7 +221,7 @@ class Resource(object):
                 checksum = r.text.strip()
         return checksum
 
-    def _get_acl_set(self):
+    def _get_acl_set(self, principal_owner=None):
         """Return a list of EML access principals and permissions.
 
         :return: List of access principals and permissions
@@ -254,6 +254,10 @@ class Resource(object):
                 acl.append(
                     {'principal': principal.text,
                      'permission': permission.text})
+
+        if principal_owner is not None:
+            acl.append({'principal': principal_owner,
+                        'permission': 'changePermission'})
 
         return acl
 
