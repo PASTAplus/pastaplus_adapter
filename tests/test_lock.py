@@ -43,7 +43,7 @@ class TestLock(unittest.TestCase):
         except IOError as e:
             logger.error(e)
             self.fail()
-        pass
+        self.lock.acquire()
 
     def test_locked(self):
         self.lock.acquire()
