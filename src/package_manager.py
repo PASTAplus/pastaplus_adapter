@@ -84,17 +84,20 @@ def main():
     qm = QueueManager()
     package = qm.get_head()
     gmn_client = create_gmn_client()
-    while package:
-        logger.warn('Active package: {p}'.format(p=package.get_package_str()))
+    while package is not None:
+        logger.warn('Active package: {p}'.format(p=package.package_str))
         if package.is_public():
-            logger.warn('Processing: {p}'.format(p=package.get_package_str()))
+            logger.warn('Processing: {p}'.format(p=package.package_str))
             if package.get_method() in [properties.CREATE, properties.UPDATE]:
                 predecessor = get_predecessor(queue_manager=qm, package=package)
                 resources = package.get_resources()
+                po = package.get_owner()
                 logger.info(resources)
+                # TODO: get scimeta resource
+                # TODO: process and check for D1 code in additionalMetadata
+                # TODO: remove from resource list
                 for resource in resources:
                     r = Resource(resource)
-                    po = package.get_owner()
                     sysmeta = r.get_d1_sysmeta(principal_owner=po)
                     header = r.get_vendorSpecific_header()
                     if predecessor and is_metadata(resource=r):
@@ -163,7 +166,7 @@ def main():
                     logger.error(e)
         else:
             logger.warn('Package {p} is not public'.format(
-                p=package.get_package_str()))
+                                                    p=package.package_str))
         qm.dequeue(event_package=package)
         package = qm.get_head()
 
