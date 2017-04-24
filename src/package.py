@@ -50,8 +50,8 @@ class Package(object):
         else:
             self.doi = doi_str.strip()
 
-
-    def get_package_str(self):
+    @property
+    def package_str(self):
         return self.package_str
 
     def get_package_purl(self):
@@ -83,7 +83,8 @@ class Package(object):
 
     def _get_resources(self):
         """
-        Return the list data package resources without the reflexive package resource.
+        Return the list data package resources without the reflexive package
+        resource.
 
         :return: Resources as list of strings
         """
