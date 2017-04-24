@@ -129,7 +129,7 @@ def main():
                 if predecessor:
                     predecessor_pid = predecessor.get_doi()
                     if predecessor_pid is None:
-                        predecessor_pid = predecessor.get_package_purl()
+                        predecessor_pid = predecessor.package_purl
                     old_pid = predecessor_pid
                     sysmeta.obsoletes = old_pid
                     logger.warn('Update: {}<-{}'.format(old_pid,

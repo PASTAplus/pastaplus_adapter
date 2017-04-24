@@ -36,7 +36,7 @@ class ResourceMap(object):
         self.package = package
         self.pid = self.package.get_doi()
         if self.pid is None:
-            self.pid = self.package.get_package_purl()
+            self.pid = self.package.package_purl
         self.metadata_pid, self.resource_pids = self._build_package_pids()
         self.resource_map = self._generate_resource_map()
 
@@ -94,7 +94,7 @@ class ResourceMap(object):
 
         try:
             r = requests.get(
-                self.package.get_package_purl().replace('/eml/', '/acl/eml/'),
+                self.package.package_purl.replace('/eml/', '/acl/eml/'),
                 auth=auth)
             if r.status_code == requests.codes.ok:
                 eml_acl = r.text.strip()

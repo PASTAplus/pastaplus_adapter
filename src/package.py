@@ -27,7 +27,7 @@ logger = logging.getLogger('package')
 class Package(object):
     def __init__(self, package_str=None, datetime_str=None, method_str=None,
                  owner_str=None, doi_str=None):
-        self.package_str = package_str.strip()
+        self._package_str = package_str.strip()
         self.package = self.package_str.split(".")
         self.scope = self.package[0]
         self.identifier = int(self.package[1])
@@ -46,15 +46,16 @@ class Package(object):
         self.owner = owner_str.strip()
 
         if doi_str is None:
-            self.doi = self.get_package_purl()
+            self.doi = self.package_purl
         else:
             self.doi = doi_str.strip()
 
     @property
     def package_str(self):
-        return self.package_str
+        return self._package_str
 
-    def get_package_purl(self):
+    @property
+    def package_purl(self):
         return properties.PASTA_BASE_URL + 'eml/' + self.package_path
 
     def get_scope(self):
