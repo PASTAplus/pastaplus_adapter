@@ -29,7 +29,7 @@ class Package(object):
                  owner_str=None, doi_str=None):
         self._package_str = package_str.strip()
         self.package = self.package_str.split(".")
-        self.scope = self.package[0]
+        self._scope = self.package[0]
         self.identifier = int(self.package[1])
         self.revision = int(self.package[2])
         self.package_path = self.package_str.replace('.', '/')
@@ -58,8 +58,9 @@ class Package(object):
     def package_purl(self):
         return properties.PASTA_BASE_URL + 'eml/' + self.package_path
 
-    def get_scope(self):
-        return self.scope
+    @property
+    def scope(self):
+        return self._scope
 
     def get_identifier(self):
         return self.identifier

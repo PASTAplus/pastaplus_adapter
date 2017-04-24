@@ -52,11 +52,11 @@ class TestPackage(unittest.TestCase):
         pass
 
     def test_get_package(self):
-        package = self.package.get_package_str()
+        package = self.package.package_str
         self.assertEqual(TestPackage.package_str, package)
 
     def test_get_scope(self):
-        scope = self.package.get_scope()
+        scope = self.package.scope
         self.assertEqual(TestPackage.scope, scope)
 
     def test_get_identifier(self):

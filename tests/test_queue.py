@@ -42,8 +42,8 @@ class TestAdapterQueue(unittest.TestCase):
     def test_get_head(self):
         self.enqueue_all()
         package = self.qm.get_head()
-        self.assertEqual(self.packages[0].get_package_str(),
-                         package.get_package_str())
+        self.assertEqual(self.packages[0].package_str,
+                         package.package_str)
 
     def test_dequeue(self):
         self.enqueue_all()
@@ -61,7 +61,7 @@ class TestAdapterQueue(unittest.TestCase):
         self.enqueue_all()
         package = self.packages[4]
         predecessor = self.qm.get_predecessor(package)
-        print(predecessor.get_package_str())
+        print(predecessor.package_str)
         pass
 
     def build_packages(self):

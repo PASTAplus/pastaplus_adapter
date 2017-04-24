@@ -95,7 +95,7 @@ def parse(url=None, fromDate=None, toDate=None, scope=properties.SCOPE):
                 package = Package(package_str=p, datetime_str=d, method_str=m,
                                   owner_str=o, doi_str=i)
                 # Provide additional filter for multiple scope values
-                if package.get_scope() in properties.PASTA_WHITELIST:
+                if package.scope in properties.PASTA_WHITELIST:
                     logger.warn('Enqueue: {p} - {d} - {m} - {i}'.format(p=p, d=d,
                                                                       m=m, i=i))
                     qm.enqueue(event_package=package)

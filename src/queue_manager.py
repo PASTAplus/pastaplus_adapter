@@ -61,8 +61,8 @@ class QueueManager(object):
 
     def enqueue(self, event_package=None):
         event = Queue(
-            package=event_package.get_package_str(),
-            scope=event_package.get_scope(),
+            package=event_package.package_str,
+            scope=event_package.scope,
             identifier=event_package.get_identifier(),
             revision=event_package.get_revision(),
             method=event_package.get_method(),
@@ -80,7 +80,7 @@ class QueueManager(object):
     def dequeue(self, event_package=None):
         try:
             event = self.session.query(Queue).filter(
-                Queue.package == event_package.get_package_str(),
+                Queue.package == event_package.package_str,
                 Queue.method == event_package.get_method()).one()
             event.dequeued = True
             self.session.commit()
@@ -108,7 +108,7 @@ class QueueManager(object):
         dequeued = None
         try:
             event = self.session.query(Queue).filter(
-                Queue.package == event_package.get_package_str(),
+                Queue.package == event_package.package_str,
                 Queue.method == event_package.get_method()).one()
             dequeued = event.dequeued
         except NoResultFound as e:
@@ -124,7 +124,7 @@ class QueueManager(object):
         :return: predecessor as package instance or None if none found
         """
         predecessor = None
-        scope = event_package.get_scope()
+        scope = event_package.scope
         identifier = event_package.get_identifier()
         revision = event_package.get_revision()
         event = self.session.query(Queue).filter(Queue.scope == scope,
