@@ -54,7 +54,7 @@ class TestAdapterQueue(unittest.TestCase):
     def test_get_last_datetime(self):
         self.enqueue_all()
         datetime_str = self.qm.get_last_datetime()
-        self.assertEqual(self.packages[5].get_datetime().strftime(
+        self.assertEqual(self.packages[5].datetime.strftime(
             '%Y-%m-%dT%H:%M:%S.%f').rstrip('0'), datetime_str)
 
     def test_get_predecessor(self):

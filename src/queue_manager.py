@@ -63,12 +63,12 @@ class QueueManager(object):
         event = Queue(
             package=event_package.package_str,
             scope=event_package.scope,
-            identifier=event_package.get_identifier(),
-            revision=event_package.get_revision(),
-            method=event_package.get_method(),
-            datetime=event_package.get_datetime(),
-            owner=event_package.get_owner(),
-            doi=event_package.get_doi()
+            identifier=event_package.identifier,
+            revision=event_package.revision,
+            method=event_package.method,
+            datetime=event_package.datetime,
+            owner=event_package.owner,
+            doi=event_package.doi
         )
         try:
             self.session.add(event)
@@ -81,12 +81,12 @@ class QueueManager(object):
         try:
             event = self.session.query(Queue).filter(
                 Queue.package == event_package.package_str,
-                Queue.method == event_package.get_method()).one()
+                Queue.method == event_package.method).one()
             event.dequeued = True
             self.session.commit()
         except NoResultFound as e:
-            logger.error('{e} - {package_str}'.format(e=e,
-                                                      package_str=event_package.get_package_str()))
+            ps = event_package.package_str
+            logger.error('{e} - {package_str}'.format(e=e, package_str=ps))
 
     def get_head(self):
         package = None
@@ -109,11 +109,11 @@ class QueueManager(object):
         try:
             event = self.session.query(Queue).filter(
                 Queue.package == event_package.package_str,
-                Queue.method == event_package.get_method()).one()
+                Queue.method == event_package.method).one()
             dequeued = event.dequeued
         except NoResultFound as e:
-            logger.error('{e} - {package_str}'.format(e=e,
-                                                      package_str=event_package.get_package_str()))
+            ps = event_package.package_str
+            logger.error('{e} - {package_str}'.format(e=e, package_str=ps))
         return dequeued
 
     def get_predecessor(self, event_package=None):
@@ -125,8 +125,8 @@ class QueueManager(object):
         """
         predecessor = None
         scope = event_package.scope
-        identifier = event_package.get_identifier()
-        revision = event_package.get_revision()
+        identifier = event_package.identifier
+        revision = event_package.revision
         event = self.session.query(Queue).filter(Queue.scope == scope,
                     Queue.identifier == identifier,
                     Queue.revision < revision).order_by(

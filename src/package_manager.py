@@ -88,10 +88,10 @@ def main():
         logger.warn('Active package: {p}'.format(p=package.package_str))
         if package.is_public():
             logger.warn('Processing: {p}'.format(p=package.package_str))
-            if package.get_method() in [properties.CREATE, properties.UPDATE]:
+            if package.method in [properties.CREATE, properties.UPDATE]:
                 predecessor = get_predecessor(queue_manager=qm, package=package)
-                resources = package.get_resources()
-                po = package.get_owner()
+                resources = package.resources
+                po = package.owner
                 logger.info(resources)
                 # TODO: get scimeta resource
                 # TODO: process and check for D1 code in additionalMetadata
@@ -127,7 +127,7 @@ def main():
                 rmap = resource_map.get_resource_map()
                 resource_map_pid = resource_map.get_resource_map_pid()
                 if predecessor:
-                    predecessor_pid = predecessor.get_doi()
+                    predecessor_pid = predecessor.doi
                     if predecessor_pid is None:
                         predecessor_pid = predecessor.package_purl
                     old_pid = predecessor_pid
@@ -151,14 +151,14 @@ def main():
                         logger.error(e)
 
             else:  # deleteDataPackage
-                resources = package.get_resources()
+                resources = package.resources
                 for resource in resources:
                     logger.warn('Delete: {}'.format(resource))
                     try:
                         gmn_client.archive(pid=resource)
                     except Exception as e:
                         logger.error(e)
-                pid = package.get_doi()
+                pid = package.doi
                 logger.warn('Delete: {}'.format(pid))
                 try:
                     gmn_client.archive(pid=pid)

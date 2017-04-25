@@ -30,25 +30,25 @@ class Package(object):
         self._package_str = package_str.strip()
         self.package = self.package_str.split(".")
         self._scope = self.package[0]
-        self.identifier = int(self.package[1])
-        self.revision = int(self.package[2])
+        self._identifier = int(self.package[1])
+        self._revision = int(self.package[2])
         self.package_path = self.package_str.replace('.', '/')
-        self.resources = self._get_resources()
+        self._resources = self._get_resources()
 
         if 'T' in datetime_str:
-            self.datetime = datetime.strptime(datetime_str,
+            self._datetime = datetime.strptime(datetime_str,
                                               '%Y-%m-%dT%H:%M:%S.%f')
         else:
-            self.datetime = datetime.strptime(datetime_str,
+            self._datetime = datetime.strptime(datetime_str,
                                               '%Y-%m-%d %H:%M:%S.%f')
 
-        self.method = method_str.strip()
-        self.owner = owner_str.strip()
+        self._method = method_str.strip()
+        self._owner = owner_str.strip()
 
         if doi_str is None:
-            self.doi = self.package_purl
+            self._doi = self.package_purl
         else:
-            self.doi = doi_str.strip()
+            self._doi = doi_str.strip()
 
     @property
     def package_str(self):
@@ -62,26 +62,33 @@ class Package(object):
     def scope(self):
         return self._scope
 
-    def get_identifier(self):
-        return self.identifier
+    @property
+    def identifier(self):
+        return self._identifier
 
-    def get_revision(self):
-        return self.revision
+    @property
+    def revision(self):
+        return self._revision
 
-    def get_resources(self):
-        return self.resources
+    @property
+    def resources(self):
+        return self._resources
 
-    def get_datetime(self):
-        return self.datetime
+    @property
+    def datetime(self):
+        return self._datetime
 
-    def get_method(self):
-        return self.method
+    @property
+    def method(self):
+        return self._method
 
-    def get_owner(self):
-        return self.owner
+    @property
+    def owner(self):
+        return self._owner
 
-    def get_doi(self):
-        return self.doi
+    @property
+    def doi(self):
+        return self._doi
 
     def _get_resources(self):
         """
@@ -91,7 +98,7 @@ class Package(object):
         :return: Resources as list of strings
         """
         resources = []
-        url = properties.PASTA_BASE_URL + 'eml/' + self.package_path
+        url = self.package_purl
         try:
             r = requests.get(url=url)
             if r.status_code == requests.codes.ok:
@@ -107,7 +114,7 @@ class Package(object):
         return resources
 
     def is_public(self):
-        for resource in self.resources:
+        for resource in self._resources:
             r = Resource(resource=resource)
             if not r.is_public():
                 return False

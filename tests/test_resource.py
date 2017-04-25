@@ -53,11 +53,11 @@ class TestResource(unittest.TestCase):
         pass
 
     def test_build_system_metadata(self):
-        resources = self.package.get_resources()
+        resources = self.package.resources
         for resource in resources:
             r = Resource(resource=resource)
             sysmeta = r.get_d1_sysmeta(
-                principal_owner=self.package.get_owner())
+                principal_owner=self.package.owner)
             self.assertEqual(resource, sysmeta.identifier.value())
             print(sysmeta.toxml())
 

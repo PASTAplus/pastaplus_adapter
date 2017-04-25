@@ -60,33 +60,32 @@ class TestPackage(unittest.TestCase):
         self.assertEqual(TestPackage.scope, scope)
 
     def test_get_identifier(self):
-        identifier = self.package.get_identifier()
+        identifier = self.package.identifier
         self.assertEqual(TestPackage.identifier, identifier)
 
     def test_get_revision(self):
-        revision = self.package.get_revision()
+        revision = self.package.revision
         self.assertEqual(TestPackage.revision, revision)
 
     def test_get_datetime(self):
-        datetime = self.package.get_datetime()
+        datetime = self.package.datetime
         self.assertEqual(TestPackage.datetime, datetime)
         datetime_str = datetime.strftime('%Y-%m-%dT%H:%M:%S.%f').rstrip('0')
         self.assertEqual(TestPackage.datetime_str, datetime_str)
 
     def test_get_method(self):
-        method_str = self.package.get_method()
+        method_str = self.package.method
         self.assertEqual(TestPackage.method_str, method_str)
 
     def test_get_resources(self):
-        resources = self.package.get_resources()
-        print resources
+        resources = self.package.resources
         self.assertEqual(TestPackage.number_of_resources, len(resources))
 
     def test_is_public(self):
         self.assertTrue(self.package.is_public())
 
     def test_get_doi(self):
-        self.assertEqual(TestPackage.doi, self.package.get_doi())
+        self.assertEqual(TestPackage.doi, self.package.doi)
 
 
 if __name__ == '__main__':
