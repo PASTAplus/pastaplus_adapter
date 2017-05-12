@@ -52,6 +52,7 @@ DEFAULT_RIGHTS_HOLDER = u'CN=PASTA-GMN,O=EDI,ST=New Mexico,C=US'
 PASTA_WHITELIST = {'edi'}
 GMN_RESPONSE_TIMEOUT = 3 * 60
 SCOPE = u'edi'
+VERIFY_TLS = True
 
 # Files
 QUEUE = u'adapter_queue.sqlite'
