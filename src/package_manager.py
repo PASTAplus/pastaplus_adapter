@@ -47,8 +47,9 @@ def create_gmn_client():
     return d1_client.mnclient_2_0.MemberNodeClient_2_0(
         base_url=properties.GMN_BASE_URL,
         cert_pem_path=properties.GMN_CERT_PATH,
-        cert_key_path=properties.GMN_PRIVATE_KEY_PATH,
+        cert_key_path=properties.GMN_KEY_PATH,
         timeout=properties.GMN_RESPONSE_TIMEOUT,
+        verify_tls=properties.VERIFY_TLS,
     )
 
 
@@ -83,10 +84,10 @@ def main():
 
     qm = QueueManager()
     package = qm.get_head()
-    gmn_client = create_gmn_client()
     while package is not None:
         logger.warn('Active package: {p}'.format(p=package.package_str))
         if package.is_public():
+            gmn_client = create_gmn_client()
             logger.warn('Processing: {p}'.format(p=package.package_str))
             if package.method in [properties.CREATE, properties.UPDATE]:
                 predecessor = get_predecessor(queue_manager=qm, package=package)
