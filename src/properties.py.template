@@ -35,6 +35,13 @@ PACKAGE = u'package'
 METADATA = u'metadata'
 DATA = u'data'
 REPORT = u'report'
+ORE = u'ore'
+
+# Resource URL patterns
+PACKAGE_PATTERN = '/package/eml'
+METADATA_PATTERN = '/package/metadata/eml'
+DATA_PATTERN = '/package/data/eml'
+REPORT_PATTERN = '/package/report/eml'
 
 # PASTA environments
 PRODUCTION = u'pasta.lternet.edu'
