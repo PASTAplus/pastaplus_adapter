@@ -89,40 +89,45 @@ def main():
         if package.is_public():
             gmn_client = create_gmn_client()
             logger.warn('Processing: {p}'.format(p=package.package_str))
+            resources = package.resources
             if package.method in [properties.CREATE, properties.UPDATE]:
                 predecessor = get_predecessor(queue_manager=qm, package=package)
-                resources = package.resources
-                po = package.owner
-                logger.info(resources)
-                # TODO: get scimeta resource
-                # TODO: process and check for D1 code in additionalMetadata
-                # TODO: remove from resource list
-                for resource in resources:
+                r = Resource(resources[properties.METADATA])
+                sysmeta = r.get_d1_sysmeta(principal_owner=package.owner)
+                header = r.get_vendorSpecific_header()
+                if predecessor:
+                    old_pid = make_metadata_url(predecessor.package_path)
+                    sysmeta.obsoletes = old_pid
+                    logger.warn('Update: {}<-{}'.format(old_pid, resource))
+                    try:
+                        gmn_client.update(pid=old_pid,
+                                          obj=StringIO.StringIO(),
+                                          newPid=resource,
+                                          sysmeta_pyxb=sysmeta,
+                                          vendorSpecific=header)
+                    except Exception as e:
+                        logger.error(e)
+                else:
+                    logger.warn('Create: {}'.format(resource))
+                    try:
+                        gmn_client.create(pid=resource,
+                                          obj=StringIO.StringIO(),
+                                          sysmeta_pyxb=sysmeta,
+                                          vendorSpecific=header)
+                    except Exception as e:
+                        logger.error(e)
+                for resource in resources[properties.DATA]:
                     r = Resource(resource)
-                    sysmeta = r.get_d1_sysmeta(principal_owner=po)
+                    sysmeta = r.get_d1_sysmeta(principal_owner=package.owner)
                     header = r.get_vendorSpecific_header()
-                    if predecessor and is_metadata(resource=r):
-                        old_pid = make_metadata_url(
-                            predecessor.package_path)
-                        sysmeta.obsoletes = old_pid
-                        logger.warn('Update: {}<-{}'.format(old_pid, resource))
-                        try:
-                            gmn_client.update(pid=old_pid,
-                                              obj=StringIO.StringIO(),
-                                              newPid=resource,
-                                              sysmeta_pyxb=sysmeta,
-                                              vendorSpecific=header)
-                        except Exception as e:
-                            logger.error(e)
-                    else:
-                        logger.warn('Create: {}'.format(resource))
-                        try:
-                            gmn_client.create(pid=resource,
-                                              obj=StringIO.StringIO(),
-                                              sysmeta_pyxb=sysmeta,
-                                              vendorSpecific=header)
-                        except Exception as e:
-                            logger.error(e)
+                    logger.warn('Create: {}'.format(resource))
+                    try:
+                        gmn_client.create(pid=resource,
+                                          obj=StringIO.StringIO(),
+                                          sysmeta_pyxb=sysmeta,
+                                          vendorSpecific=header)
+                    except Exception as e:
+                        logger.error(e)
                 resource_map = ResourceMap(package=package)
                 sysmeta = resource_map.get_resource_map_system_metadata()
                 rmap = resource_map.get_resource_map()
