@@ -78,8 +78,10 @@ class TestPackage(unittest.TestCase):
         self.assertEqual(TestPackage.method_str, method_str)
 
     def test_get_resources(self):
+        cnt = 1 # Begin with cnt = 1 for single metadata resource
         resources = self.package.resources
-        self.assertEqual(TestPackage.number_of_resources, len(resources))
+        cnt += len(resources[properties.DATA])
+        self.assertEqual(TestPackage.number_of_resources, cnt)
 
     def test_is_public(self):
         self.assertTrue(self.package.is_public())
