@@ -33,7 +33,7 @@ class Package(object):
         self._identifier = int(self.package[1])
         self._revision = int(self.package[2])
         self.package_path = self.package_str.replace('.', '/')
-        self._resources = self._get_resources()
+        self._resources_dict = self._get_dict_of_resources()
 
         if 'T' in datetime_str:
             self._datetime = datetime.strptime(datetime_str,
@@ -72,7 +72,7 @@ class Package(object):
 
     @property
     def resources(self):
-        return self._resources
+        return self._resources_dict
 
     @property
     def datetime(self):
@@ -90,34 +90,51 @@ class Package(object):
     def doi(self):
         return self._doi
 
-    def _get_resources(self):
+    def _get_dict_of_resources(self):
         """
-        Return the list data package resources without the reflexive package
+        Return the dict data package resources without the reflexive package
         resource.
 
-        :return: Resources as list of strings
+        :return: Resources as dict of resources
         """
         resources = []
+        resources_dict = {properties.METADATA: '',
+                         properties.DATA: [],
+                         }
         url = self.package_purl
         try:
             r = requests.get(url=url)
             if r.status_code == requests.codes.ok:
                 resources = r.text.split()
-                for resource in resources:
-                    if 'package/eml' in resource:
-                        resources.remove(resource)
         except (requests.exceptions.RequestException,
                 requests.exceptions.BaseHTTPError,
                 requests.exceptions.HTTPError,
                 requests.exceptions.ConnectionError) as e:
             logger.error(e)
-        return resources
+
+        for resource in resources:
+            if properties.METADATA_PATTERN in resource:
+                resources_dict[properties.METADATA] = resource
+            elif properties.DATA_PATTERN in resource:
+                resources_dict[properties.DATA].append(resource)
+            elif properties.REPORT_PATTERN in resource:
+                # Report resources are considered data
+                resources_dict[properties.DATA].append(resource)
+
+        return resources_dict
 
     def is_public(self):
-        for resource in self._resources:
+
+        resource = self._resources_dict[properties.METADATA]
+        r = Resource(resource=resource)
+        if not r.is_public():
+            return False
+
+        for resource in self._resources_dict[properties.DATA]:
             r = Resource(resource=resource)
             if not r.is_public():
                 return False
+
         return True
 
 
