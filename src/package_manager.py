@@ -92,7 +92,8 @@ def main():
             resources = package.resources
             if package.method in [properties.CREATE, properties.UPDATE]:
                 predecessor = get_predecessor(queue_manager=qm, package=package)
-                r = Resource(resources[properties.METADATA])
+                resource = resources[properties.METADATA]
+                r = Resource(resource)
                 sysmeta = r.get_d1_sysmeta(principal_owner=package.owner)
                 header = r.get_vendorSpecific_header()
                 if predecessor:
@@ -157,19 +158,17 @@ def main():
                         logger.error(e)
 
             else:  # deleteDataPackage
-                resources = package.resources
+                resources = []
+                resources.append(package.doi)
+                resources.append(package.resources[properties.METADATA])
+                for resource in package.resources[properties.DATA]:
+                    resources.append(resource)
                 for resource in resources:
                     logger.warn('Delete: {}'.format(resource))
                     try:
                         gmn_client.archive(pid=resource)
                     except Exception as e:
                         logger.error(e)
-                pid = package.doi
-                logger.warn('Delete: {}'.format(pid))
-                try:
-                    gmn_client.archive(pid=pid)
-                except Exception as e:
-                    logger.error(e)
         else:
             logger.warn('Package {p} is not public'.format(
                                                     p=package.package_str))
