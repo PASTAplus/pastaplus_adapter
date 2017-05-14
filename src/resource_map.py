@@ -32,6 +32,7 @@ from resource import Resource
 
 
 class ResourceMap(object):
+
     def __init__(self, package=None):
         self.package = package
         self.pid = self.package.doi
@@ -52,15 +53,8 @@ class ResourceMap(object):
         return self.pid
 
     def _build_package_pids(self):
-        metadata_pid = None
-        resource_pids = []
-        resources = self.package.resources
-        for resource in resources:
-            r = Resource(resource=resource)
-            if r.get_type() == properties.METADATA:
-                metadata_pid = r.resource
-            else:
-                resource_pids.append(resource)
+        metadata_pid = self.package.resources[properties.METADATA]
+        resource_pids = self.package.resources[properties.DATA]
         return metadata_pid, resource_pids
 
     def _generate_resource_map(self):
