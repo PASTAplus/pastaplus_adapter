@@ -55,10 +55,11 @@ class Resource(object):
     def get_d1_sysmeta(self, principal_owner=None):
         """
         Build the DataONE system metadata pyxb object from the local system
-        data structure. The 'rights holder' is passed in from the package
-        object and applies to all resources in the package.
+        data structure. The 'principal owner' is passed in from the package
+        object and applies to all resources in the package. The principal
+        owner is the user who originally uploaded the data package into PASTA.
 
-        :param rights_holder: Resource rights holder as string
+        :param principal_owner: Resource principal owner as string
         :return: DataONE system metadata as pyxb object
         """
         local_sys_meta = self._build_system_metadata(
@@ -244,10 +245,9 @@ class Resource(object):
             if r is not None:
                 eml_acl = r.text.strip()
 
-        acl = None
+        acl = []
         if eml_acl is not None:
             tree = ET.ElementTree(ET.fromstring(eml_acl))
-            acl = []
             for allow_rule in tree.iter('allow'):
                 principal = allow_rule.find('./principal')
                 permission = allow_rule.find('./permission')
