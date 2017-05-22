@@ -91,6 +91,7 @@ def main():
             logger.warn('Processing: {p}'.format(p=package.package_str))
             resources = package.resources
             if package.method in [properties.CREATE, properties.UPDATE]:
+                # Process science metadata
                 predecessor = get_predecessor(queue_manager=qm, package=package)
                 resource = resources[properties.METADATA]
                 r = Resource(resource)
@@ -117,6 +118,7 @@ def main():
                                           vendorSpecific=header)
                     except Exception as e:
                         logger.error(e)
+                # Process data entities
                 for resource in resources[properties.DATA]:
                     r = Resource(resource)
                     sysmeta = r.get_d1_sysmeta(principal_owner=package.owner)
@@ -158,11 +160,14 @@ def main():
                         logger.error(e)
 
             else:  # deleteDataPackage
+                # Build single list of resources, including scimeta, ore, and data
                 resources = []
                 resources.append(package.doi)
                 resources.append(package.resources[properties.METADATA])
                 for resource in package.resources[properties.DATA]:
                     resources.append(resource)
+
+                # Process deletion for list of resources
                 for resource in resources:
                     logger.warn('Delete: {}'.format(resource))
                     try:
