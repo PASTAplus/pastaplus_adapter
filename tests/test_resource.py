@@ -53,7 +53,11 @@ class TestResource(unittest.TestCase):
         pass
 
     def test_build_system_metadata(self):
-        resources = self.package.resources
+        resources = []
+        resources.append(self.package.resources[properties.METADATA])
+        for resource in self.package.resources[properties.DATA]:
+            resources.append(resource)
+
         for resource in resources:
             r = Resource(resource=resource)
             sysmeta = r.get_d1_sysmeta(
