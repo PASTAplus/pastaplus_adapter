@@ -84,7 +84,7 @@ class TestPackage(unittest.TestCase):
         self.assertEqual(TestPackage.number_of_resources, cnt)
 
     def test_is_public(self):
-        self.assertTrue(self.package.is_public())
+        self.assertTrue(self.package.public)
 
     def test_get_doi(self):
         self.assertEqual(TestPackage.doi, self.package.doi)
