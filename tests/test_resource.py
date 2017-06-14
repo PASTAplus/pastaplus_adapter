@@ -42,6 +42,7 @@ class TestResource(unittest.TestCase):
     owner_str = 'uid=LNO,o=LTER,dc=ecoinformatics,dc=org'
     doi = 'doi:10.6073/pasta/3bcc89b2d1a410b7a2c678e3c55055e1'
     url = properties.PASTA_BASE_URL
+    scimeta_size = 48509
 
     def setUp(self):
         self.package = Package(package_str=TestResource.package_str,
@@ -64,6 +65,18 @@ class TestResource(unittest.TestCase):
                 principal_owner=self.package.owner)
             self.assertEqual(resource, sysmeta.identifier.value())
             print(sysmeta.toxml())
+
+    def test_get_science_metadata(self):
+        resources = []
+        resources.append(self.package.resources[properties.METADATA])
+        for resource in self.package.resources[properties.DATA]:
+            resources.append(resource)
+
+        for resource in resources:
+            r = Resource(resource=resource)
+            scimeta = r.get_science_metadata()
+            self.assertEqual(self.scimeta_size, len(scimeta))
+
 
 
 if __name__ == '__main__':
