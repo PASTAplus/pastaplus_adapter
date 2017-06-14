@@ -154,7 +154,6 @@ class Resource(object):
                 'preferredMemberNode': [],  # e.g., 'urn:node:LTER'
                 'blockedMemberNode': []  # e.g., 'urn:node:LTER'
             },
-
         }
         return sysmeta
 
@@ -275,6 +274,15 @@ class Resource(object):
                 requests.exceptions.ConnectionError) as e:
             logger.error(e)
         return r
+
+    def _make_metadata_url(package_path=None):
+        return properties.PASTA_BASE_URL + 'metadata/eml/' + package_path
+
+    def get_science_metadata(self):
+        url = self._make_metadata_url(package_path=self.package_path)
+        r = self._requests_get_wrapped(url=url)
+        return r.text.strip()
+
 
 
 def main():
