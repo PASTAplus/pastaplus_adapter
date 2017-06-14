@@ -99,7 +99,7 @@ def main():
     package = qm.get_head()
     while package is not None:
         logger.warn('Active package: {p}'.format(p=package.package_str))
-        if package.is_public():
+        if package.public:
             gmn_client = create_gmn_client()
             logger.warn('Processing: {p}'.format(p=package.package_str))
             resources = package.resources
