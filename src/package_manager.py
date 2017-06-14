@@ -14,13 +14,13 @@ from __future__ import print_function
     3/8/17
 """
 
-import os
 import logging
 
 # Set level to WARN to avoid verbosity in requests at INFO
 logging.basicConfig(format='%(asctime)s %(levelname)s (%(name)s): %(message)s',
                     datefmt='%Y-%m-%d %H:%M:%S%z', level=logging.WARN)
 import StringIO
+import xml.etree.ElementTree as ET
 
 import d1_client.cnclient_2_0
 import d1_client.mnclient_2_0
@@ -72,6 +72,19 @@ def is_metadata(resource=None):
     return resource.get_type() == properties.METADATA
 
 
+def get_replication_policy(eml_xml=None):
+    NAMESPACE_DICT = {
+        'eml': 'eml://ecoinformatics.org/eml-2.1.1',
+        'd1v1': 'http://ns.dataone.org/service/types/v1'
+    }
+    tree = ET.ElementTree(ET.fromstring(eml_xml))
+    root = tree.getroot()
+    replicationPolicy_list = root.findall(
+        "additionalMetadata/metadata/d1v1:replicationPolicy", NAMESPACE_DICT)
+    if len(replicationPolicy_list):
+        return ET.tostring(replicationPolicy_list[0])
+
+
 def main():
 
     lock = Lock('/tmp/package_manager.lock')
@@ -95,6 +108,8 @@ def main():
                 predecessor = get_predecessor(queue_manager=qm, package=package)
                 resource = resources[properties.METADATA]
                 r = Resource(resource)
+                scimeta = r.get_science_metadata().encode('utf-8').strip()
+                replication_policy = get_replication_policy(eml_xml=scimeta)
                 sysmeta = r.get_d1_sysmeta(principal_owner=package.owner)
                 header = r.get_vendorSpecific_header()
                 if predecessor:
