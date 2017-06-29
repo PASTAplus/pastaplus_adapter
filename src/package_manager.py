@@ -63,7 +63,7 @@ def get_predecessor(queue_manager=None, package=None):
     :return: predecessor as a package instance or None if none found
     """
     predecessor = queue_manager.get_predecessor(event_package=package)
-    while predecessor and not predecessor.is_public():
+    while predecessor and not predecessor.public:
         predecessor = queue_manager.get_predecessor(event_package=predecessor)
     return predecessor
 
