@@ -104,6 +104,10 @@ class Package(object):
         return self._owner
 
     @property
+    def package_path(self):
+        return self._package_path
+
+    @property
     def package_purl(self):
         return properties.PASTA_BASE_URL + 'eml/' + self._package_path
 
