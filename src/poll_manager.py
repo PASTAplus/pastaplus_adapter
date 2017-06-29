@@ -35,7 +35,7 @@ logger = logging.getLogger('poll_manager')
 def bootstrap():
     url = properties.PASTA_BASE_URL + '/changes/eml?'
     now = datetime.now()
-    fromDate = datetime.strptime('2013-01-01T00:00:00.00',
+    fromDate = datetime.strptime(properties.FROM_DATE,
                                  '%Y-%m-%dT%H:%M:%S.%f')
     while fromDate < now:
         toDate = fromDate + timedelta(days=1)
