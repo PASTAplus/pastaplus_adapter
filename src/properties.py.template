@@ -63,6 +63,9 @@ VERIFY_TLS = True
 QUEUE = u'adapter_queue.sqlite'
 FORMATS = u'formats.pkl'
 
+# Polling from/to dates
+FROM_DATE = u'2013-01-01T00:00:00.00'
+
 def main():
     return 0
 
