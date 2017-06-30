@@ -19,18 +19,29 @@ from datetime import datetime
 from datetime import timedelta
 
 import d1_client.cnclient_2_0
+import requests
 
 import properties
 
+
 logger = logging.getLogger('adapter_utilities')
+logging.basicConfig(format='%(asctime)s %(levelname)s (%(name)s): %(message)s',
+                    datefmt='%Y-%m-%d %H:%M:%S%z',
+                    # filename='$NAME' + '.log',
+                    level=logging.INFO)
 
-
-def make_https(url=None):
-    return url.replace('http:', 'https:', 1)
-
-
-def make_http(url=None):
-    return url.replace('https:', 'http:', 1)
+def _is_stale_file(filename=None, seconds=None):
+    is_stale = False
+    try:
+        mtime = os.path.getmtime(filename=filename)
+        delta = datetime.fromtimestamp(timestamp=mtime) + \
+                timedelta(seconds=seconds)
+        if delta < datetime.now():
+            is_stale = True
+    except OSError as e:
+        logger.error(e)
+        is_stale = True
+    return is_stale
 
 
 def get_d1_formats(url=properties.D1_BASE_URL):
@@ -63,23 +74,22 @@ def get_d1_formats(url=properties.D1_BASE_URL):
     return formats
 
 
-def _is_stale_file(filename=None, seconds=None):
-    is_stale = False
+def make_http(url=None):
+    return url.replace('https:', 'http:', 1)
+
+
+def make_https(url=None):
+    return url.replace('http:', 'https:', 1)
+
+
+def requests_get_url_wrapper(url=None, auth=None):
+    r = None
     try:
-        mtime = os.path.getmtime(filename=filename)
-        delta = datetime.fromtimestamp(timestamp=mtime) + \
-                timedelta(seconds=seconds)
-        if delta < datetime.now():
-            is_stale = True
-    except OSError as e:
+        r = requests.get(url=url, auth=auth)
+        if r.status_code != requests.codes.ok:
+            logger.error('Bad status code ({code}) for {url}'.format(
+                code=r.status_code, url=url))
+            r = None
+    except Exception as e:
         logger.error(e)
-        is_stale = True
-    return is_stale
-
-
-def main():
-    return 0
-
-
-if __name__ == "__main__":
-    main()
+    return r
