@@ -211,10 +211,6 @@ class Resource(object):
             size = int(size)
         return size
 
-    def _make_metadata_url(self):
-        return properties.PASTA_BASE_URL + 'metadata/eml/' + \
-               self._get_resource_package_path()
-
     @property
     def public(self):
         """Determines if the resource is publicly accessible
@@ -256,7 +252,9 @@ class Resource(object):
 
     def get_science_metadata(self):
         scimeta = None
-        r = adapter_utilities.requests_get_url_wrapper(url=self._make_metadata_url())
+        url = properties.PASTA_BASE_URL + 'metadata/eml/' + \
+              self._get_resource_package_path()
+        r = adapter_utilities.requests_get_url_wrapper(url=url)
         if r is not None:
             scimeta = r.text.strip()
         return scimeta
