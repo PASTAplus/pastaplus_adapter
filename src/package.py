@@ -119,11 +119,11 @@ class Package(object):
     def public(self):
         resource = self._resources_dict[properties.METADATA]
         r = Resource(resource=resource)
-        if not r.is_public():
+        if not r.public:
             return False
         for resource in self._resources_dict[properties.DATA]:
             r = Resource(resource=resource)
-            if not r.is_public():
+            if not r.public:
                 return False
         return True
 
