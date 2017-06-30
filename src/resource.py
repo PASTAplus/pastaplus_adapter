@@ -215,21 +215,6 @@ class Resource(object):
         return properties.PASTA_BASE_URL + 'metadata/eml/' + \
                self._get_resource_package_path()
 
-    def _requests_get_wrapped(self, url=None, auth=None):
-        r = None
-        try:
-            r = requests.get(url=url, auth=auth)
-            if r.status_code != requests.codes.ok:
-                logger.error('Bad status code ({code}) for {url}'.format(
-                    code=r.status_code, url=url))
-                r = None
-        except (requests.exceptions.RequestException,
-                requests.exceptions.BaseHTTPError,
-                requests.exceptions.HTTPError,
-                requests.exceptions.ConnectionError) as e:
-            logger.error(e)
-        return r
-
     @property
     def public(self):
         """Determines if the resource is publicly accessible
