@@ -20,8 +20,9 @@ import d1_common.types.exceptions
 import d1_common.types.generated.dataoneTypes_v1 as dataoneTypes_v_1
 import d1_common.types.generated.dataoneTypes_v2_0 as dataoneTypes_v2_0
 
-import properties
+import adapter_exceptions
 import adapter_utilities
+import properties
 
 logger = logging.getLogger('resource')
 
@@ -63,17 +64,17 @@ class Resource(object):
         eml_acl = None
         if self.type == properties.METADATA:
             url = self.resource.replace('/metadata/eml/', '/metadata/acl/eml/')
-            r = self._requests_get_wrapped(url=url, auth=auth)
+            r = adapter_utilities.requests_get_url_wrapper(url=url, auth=auth)
             if r is not None:
                 eml_acl = r.text.strip()
         elif self.type == properties.REPORT:
             url = self.resource.replace('/report/eml/', '/report/acl/eml/')
-            r = self._requests_get_wrapped(url=url, auth=auth)
+            r = adapter_utilities.requests_get_url_wrapper(url=url, auth=auth)
             if r is not None:
                 eml_acl = r.text.strip()
         elif self.type == properties.DATA:
             url = self.resource.replace('/data/eml/', '/data/acl/eml/')
-            r = self._requests_get_wrapped(url=url, auth=auth)
+            r = adapter_utilities.requests_get_url_wrapper(url=url, auth=auth)
             if r is not None:
                 eml_acl = r.text.strip()
 
@@ -108,17 +109,17 @@ class Resource(object):
         if self.type == properties.METADATA:
             url = self.resource.replace('/metadata/eml/',
                                         '/metadata/checksum/eml/')
-            r = self._requests_get_wrapped(url=url)
+            r = adapter_utilities.requests_get_url_wrapper(url=url)
             if r is not None:
                 checksum = r.text.strip()
         elif self.type == properties.REPORT:
             url = self.resource.replace('/report/eml/', '/report/checksum/eml/')
-            r = self._requests_get_wrapped(url=url)
+            r = adapter_utilities.requests_get_url_wrapper(url=url)
             if r is not None:
                 checksum = r.text.strip()
         elif self.type == properties.DATA:
             url = self.resource.replace('/data/eml/', '/data/checksum/eml/')
-            r = self._requests_get_wrapped(url=url)
+            r = adapter_utilities.requests_get_url_wrapper(url=url)
             if r is not None:
                 checksum = r.text.strip()
         return checksum
@@ -150,7 +151,7 @@ class Resource(object):
         if self.type == properties.METADATA:
             url = self.resource.replace('/metadata/eml/',
                                         '/metadata/format/eml/')
-            r = self._requests_get_wrapped(url=url)
+            r = adapter_utilities.requests_get_url_wrapper(url=url)
             if r is not None:
                 eml_version = r.text.strip()
                 if eml_version in self.d1_formats:
@@ -203,12 +204,12 @@ class Resource(object):
         size = None
         if self.type in [properties.METADATA, properties.REPORT]:
             url = self.resource
-            r = self._requests_get_wrapped(url=url)
+            r = adapter_utilities.requests_get_url_wrapper(url=url)
             if r is not None:
                 size = r.headers['Content-Length']
         elif self.type == properties.DATA:
             url = self.resource.replace('/data/eml/', '/data/size/eml/')
-            r = self._requests_get_wrapped(url=url)
+            r = adapter_utilities.requests_get_url_wrapper(url=url)
             if r is not None:
                 size = r.text.strip()
         if size is not None:
@@ -232,6 +233,20 @@ class Resource(object):
                 requests.exceptions.ConnectionError) as e:
             logger.error(e)
         return r
+
+    @property
+    def public(self):
+        """Determines if the resource is publicly accessible
+
+        :return: boolean
+        """
+        public = False
+        url = properties.PASTA_BASE_URL + 'authz?resourceId=' + self.resource
+        r = adapter_utilities.requests_get_url_wrapper(url=url)
+        status = None
+        if r is not None:
+            public = True
+        return public
 
     def get_d1_sysmeta(self, principal_owner=None):
         """
@@ -259,34 +274,14 @@ class Resource(object):
         return d1_sys_meta
 
     def get_science_metadata(self):
-        r = self._requests_get_wrapped(url=self._make_metadata_url())
-        return r.text.strip()
+        scimeta = None
+        r = adapter_utilities.requests_get_url_wrapper(url=self._make_metadata_url())
+        if r is not None:
+            scimeta = r.text.strip()
+        return scimeta
 
     def get_type(self):
         return self.type
 
     def get_vendorSpecific_header(self):
         return {'VENDOR-GMN-REMOTE-URL': self.resource}
-
-    def is_public(self):
-        """Determines if the resource is publicly accessible
-
-        :return: boolean
-        """
-        url = adapter_utilities.make_https(url=properties.PASTA_BASE_URL) + \
-              'authz?resourceId=' + self.resource
-        r = self._requests_get_wrapped(url=url)
-        status = None
-        if r is not None:
-            logger.info('Authz: {u} - {s}'.format(u=url, s=r.status_code))
-            status = r.status_code == requests.codes.ok
-        return status
-
-
-
-def main():
-    return 0
-
-
-if __name__ == "__main__":
-    main()
