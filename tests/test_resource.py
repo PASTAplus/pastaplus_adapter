@@ -42,7 +42,7 @@ class TestResource(unittest.TestCase):
     owner_str = 'uid=LNO,o=LTER,dc=ecoinformatics,dc=org'
     doi = 'doi:10.6073/pasta/3bcc89b2d1a410b7a2c678e3c55055e1'
     url = properties.PASTA_BASE_URL
-    scimeta_size = 48509
+    scimeta_size = 48856 # For https://pasta-d.lternet.edu/package/metadata/eml/knb-lter-nin/1/1
 
     def setUp(self):
         self.package = Package(package_str=TestResource.package_str,
