@@ -30,15 +30,12 @@ logger = logging.getLogger('resource')
 class Resource(object):
 
     def __init__(self, resource=None):
-        self.resource = resource
-        self.type = self._get_resource_type()
-        self.package_path = self._get_resource_package_path()
-        self.data_name = self._get_data_name()
-        self.d1_formats = adapter_utilities.get_d1_formats()
+        self._resource = resource
+        self._type = self._get_resource_type()
 
     def _build_system_metadata(self, principal_owner=None):
         sysmeta = {
-            'identifier': self.resource,
+            'identifier': self._resource,
             'formatId': self._get_format(),
             'size': self._get_size(),
             'checksum': {'value': self._get_checksum(),
@@ -62,18 +59,18 @@ class Resource(object):
         """
         auth = (properties.GMN_USER, properties.GMN_PASSWD)
         eml_acl = None
-        if self.type == properties.METADATA:
-            url = self.resource.replace('/metadata/eml/', '/metadata/acl/eml/')
+        if self._type == properties.METADATA:
+            url = self._resource.replace('/metadata/eml/', '/metadata/acl/eml/')
             r = adapter_utilities.requests_get_url_wrapper(url=url, auth=auth)
             if r is not None:
                 eml_acl = r.text.strip()
-        elif self.type == properties.REPORT:
-            url = self.resource.replace('/report/eml/', '/report/acl/eml/')
+        elif self._type == properties.REPORT:
+            url = self._resource.replace('/report/eml/', '/report/acl/eml/')
             r = adapter_utilities.requests_get_url_wrapper(url=url, auth=auth)
             if r is not None:
                 eml_acl = r.text.strip()
-        elif self.type == properties.DATA:
-            url = self.resource.replace('/data/eml/', '/data/acl/eml/')
+        elif self._type == properties.DATA:
+            url = self._resource.replace('/data/eml/', '/data/acl/eml/')
             r = adapter_utilities.requests_get_url_wrapper(url=url, auth=auth)
             if r is not None:
                 eml_acl = r.text.strip()
@@ -96,29 +93,29 @@ class Resource(object):
 
     def _get_base_url(self):
         base_url = None
-        if properties.PRODUCTION in self.resource:
+        if properties.PRODUCTION in self._resource:
             base_url = 'https://' + properties.PRODUCTION + '/package/'
-        elif properties.STAGING in self.resource:
+        elif properties.STAGING in self._resource:
             base_url = 'https://' + properties.STAGING + '/package/'
-        elif properties.DEVELOPMENT in self.resource:
+        elif properties.DEVELOPMENT in self._resource:
             base_url = 'https://' + properties.DEVELOPMENT + '/package/'
         return base_url
 
     def _get_checksum(self):
         checksum = None
-        if self.type == properties.METADATA:
-            url = self.resource.replace('/metadata/eml/',
+        if self._type == properties.METADATA:
+            url = self._resource.replace('/metadata/eml/',
                                         '/metadata/checksum/eml/')
             r = adapter_utilities.requests_get_url_wrapper(url=url)
             if r is not None:
                 checksum = r.text.strip()
-        elif self.type == properties.REPORT:
-            url = self.resource.replace('/report/eml/', '/report/checksum/eml/')
+        elif self._type == properties.REPORT:
+            url = self._resource.replace('/report/eml/', '/report/checksum/eml/')
             r = adapter_utilities.requests_get_url_wrapper(url=url)
             if r is not None:
                 checksum = r.text.strip()
-        elif self.type == properties.DATA:
-            url = self.resource.replace('/data/eml/', '/data/checksum/eml/')
+        elif self._type == properties.DATA:
+            url = self._resource.replace('/data/eml/', '/data/checksum/eml/')
             r = adapter_utilities.requests_get_url_wrapper(url=url)
             if r is not None:
                 checksum = r.text.strip()
@@ -142,73 +139,71 @@ class Resource(object):
 
     def _get_data_name(self):
         data_name = None
-        if self.type == properties.DATA:
-            data_name = self.resource.split('/')[-1]
+        if self._type == properties.DATA:
+            data_name = self._resource.split('/')[-1]
         return data_name
 
     def _get_format(self):
+        d1_formats = adapter_utilities.get_d1_formats()
         format_type = None
-        if self.type == properties.METADATA:
-            url = self.resource.replace('/metadata/eml/',
+        if self._type == properties.METADATA:
+            url = self._resource.replace('/metadata/eml/',
                                         '/metadata/format/eml/')
             r = adapter_utilities.requests_get_url_wrapper(url=url)
             if r is not None:
                 eml_version = r.text.strip()
-                if eml_version in self.d1_formats:
-                    format_type = self.d1_formats[eml_version].formatId
-        elif self.type == properties.REPORT:
+                if eml_version in d1_formats:
+                    format_type = d1_formats[eml_version].formatId
+        elif self._type == properties.REPORT:
             format_type = 'text/xml'
-        elif self.type == properties.DATA:
+        elif self._type == properties.DATA:
             try:
-                r = requests.head(self.resource, allow_redirects=True)
+                r = requests.head(self._resource, allow_redirects=True)
                 if r.status_code == requests.codes.ok:
                     content_type = r.headers['Content-Type']
-                    if content_type in self.d1_formats:
-                        format_type = self.d1_formats[content_type].formatId
+                    if content_type in d1_formats:
+                        format_type = d1_formats[content_type].formatId
                     else:
                         format_type = 'application/octet-stream'
-            except (requests.exceptions.RequestException,
-                    requests.exceptions.BaseHTTPError,
-                    requests.exceptions.HTTPError,
-                    requests.exceptions.ConnectionError) as e:
+            except Exception as e:
                 logger.error(e)
         return format_type
 
     def _get_resource_package_path(self):
         package_path = None
-        if self.type in [properties.METADATA, properties.REPORT]:
-            scope = self.resource.split('/')[-3]
-            identifier = self.resource.split('/')[-2]
-            revision = self.resource.split('/')[-1]
+        if self._type in [properties.METADATA, properties.REPORT]:
+            scope = self._resource.split('/')[-3]
+            identifier = self._resource.split('/')[-2]
+            revision = self._resource.split('/')[-1]
             package_path = scope + '/' + identifier + '/' + revision
-        elif self.type == properties.DATA:
-            scope = self.resource.split('/')[-4]
-            identifier = self.resource.split('/')[-3]
-            revision = self.resource.split('/')[-2]
+        elif self._type == properties.DATA:
+            scope = self._resource.split('/')[-4]
+            identifier = self._resource.split('/')[-3]
+            revision = self._resource.split('/')[-2]
             package_path = scope + '/' + identifier + '/' + revision
         return package_path
 
     def _get_resource_type(self):
         resource_type = None
-        if 'package/eml' in self.resource:
+        if 'package/eml' in self._resource:
             resource_type = properties.PACKAGE
-        elif 'package/metadata' in self.resource:
+        elif 'package/metadata' in self._resource:
             resource_type = properties.METADATA
-        elif 'package/data' in self.resource:
+        elif 'package/data' in self._resource:
             resource_type = properties.DATA
-        elif 'package/report' in self.resource:
+        elif 'package/report' in self._resource:
             resource_type = properties.REPORT
         return resource_type
 
     def _get_size(self):
         size = None
-        if self.type in [properties.METADATA, properties.REPORT]:
-            url = self.resource
+        if self._type in [properties.METADATA, properties.REPORT]:
+            url = self._resource
             r = adapter_utilities.requests_get_url_wrapper(url=url)
             if r is not None:
                 size = r.headers['Content-Length']
-        elif self.type == properties.DATA:
-            url = self.resource.replace('/data/eml/', '/data/size/eml/')
+        elif self._type == properties.DATA:
+            url = self._resource.replace('/data/eml/', '/data/size/eml/')
             r = adapter_utilities.requests_get_url_wrapper(url=url)
             if r is not None:
                 size = r.text.strip()
@@ -217,7 +212,8 @@ class Resource(object):
         return size
 
     def _make_metadata_url(self):
-        return properties.PASTA_BASE_URL + 'metadata/eml/' + self.package_path
+        return properties.PASTA_BASE_URL + 'metadata/eml/' + \
+               self._get_resource_package_path()
 
     def _requests_get_wrapped(self, url=None, auth=None):
         r = None
@@ -241,7 +237,7 @@ class Resource(object):
         :return: boolean
         """
         public = False
-        url = properties.PASTA_BASE_URL + 'authz?resourceId=' + self.resource
+        url = properties.PASTA_BASE_URL + 'authz?resourceId=' + self._resource
         r = adapter_utilities.requests_get_url_wrapper(url=url)
         status = None
         if r is not None:
@@ -281,7 +277,7 @@ class Resource(object):
         return scimeta
 
     def get_type(self):
-        return self.type
+        return self._type
 
     def get_vendorSpecific_header(self):
-        return {'VENDOR-GMN-REMOTE-URL': self.resource}
+        return {'VENDOR-GMN-REMOTE-URL': self._resource}
