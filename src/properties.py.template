@@ -26,7 +26,7 @@ GMN_BASE_URL = u'https://gmn-s.edirepository.org/mn'
 GMN_USER = u'uid=gmn-pasta,o=LTER,dc=ecoinformatics,dc=org'
 GMN_PASSWD = u'SECRET_PASSWORD'
 GMN_CERT_PATH = u'GMN_CERT_PATH'
-GMN_PRIVATE_KEY_PATH = u'GMN_PRIVATE_KEY_PATH'
+GMN_KEY_PATH = u'GMN_KEY_PATH'
 
 # Resource types
 PACKAGE = u'package'
