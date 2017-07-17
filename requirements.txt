@@ -1,3 +1,2 @@
 sqlalchemy
 dataone.libclient
-setuptools==33.1.1
