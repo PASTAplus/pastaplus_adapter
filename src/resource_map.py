@@ -21,14 +21,13 @@ import xml.etree.ElementTree as ET
 import requests
 import d1_client.cnclient_2_0
 import d1_client.mnclient_2_0
-import d1_client.data_package
 import d1_common.checksum
+import d1_common.resource_map
 import d1_common.types.exceptions
 import d1_common.types.generated.dataoneTypes_v1 as dataoneTypes_v_1
 import d1_common.types.generated.dataoneTypes_v2_0 as dataoneTypes_v2_0
 
 import properties
-from resource import Resource
 
 
 class ResourceMap(object):
@@ -37,12 +36,12 @@ class ResourceMap(object):
         self.package = package
         self.pid = self.package.doi
         if self.pid is None:
-            self.pid = self.package.package_purl
+            self.pid = self.package.package_url
         self.metadata_pid, self.resource_pids = self._build_package_pids()
         self.resource_map = self._generate_resource_map()
 
     def get_resource_map(self):
-        return self.resource_map
+        return self.resource_map.serialize()
 
     def get_resource_map_system_metadata(self, principal_owner=None):
         system_metadata = self._build_system_metadata(
@@ -55,14 +54,15 @@ class ResourceMap(object):
     def _build_package_pids(self):
         metadata_pid = self.package.resources[properties.METADATA]
         resource_pids = self.package.resources[properties.DATA]
+        resource_pids.append(self.package.resources[properties.REPORT])
         return metadata_pid, resource_pids
 
     def _generate_resource_map(self):
-        resource_map_generator = d1_client.data_package.ResourceMapGenerator(
-            properties.D1_BASE_URL)
-        return resource_map_generator.simple_generate_resource_map(
-            resource_map_pid=self.pid, science_metadata_pid=self.metadata_pid,
-            science_data_pids=self.resource_pids)
+        resource_map = d1_common.resource_map.ResourceMap(ore_pid=self.pid,
+                                   scimeta_pid=self.metadata_pid,
+                                   scidata_pid_list=self.resource_pids,
+                                   base_url=properties.D1_BASE_URL)
+        return resource_map
 
     def _build_system_metadata(self, principal_owner=None):
         acl_set = self._get_package_acl_set(principal_owner=principal_owner)
