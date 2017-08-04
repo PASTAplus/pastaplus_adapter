@@ -4,7 +4,9 @@
 """:Mod: package
 
 :Synopsis:
- 
+    Create a data package object based on a PASTA event recorded in the
+    adapter_queueu.sqlite database.
+
 :Author:
     servilla
 
@@ -17,71 +19,27 @@ from datetime import datetime
 
 import requests
 
+import adapter_utilities
 import properties
-from resource import Resource
-
+from resource import ResourceData
+from resource import ResourceMetadata
+from resource import ResourceReport
 
 logger = logging.getLogger('package')
 
 
 class Package(object):
-    def __init__(self, package_str=None, datetime_str=None, method_str=None,
-                 owner_str=None, doi_str=None):
-        self._package_str = package_str.strip()
-        self._package = self.package_str.split(".")
-        self._scope = self._package[0]
-        self._identifier = int(self._package[1])
-        self._revision = int(self._package[2])
-        self._package_path = self.package_str.replace('.', '/')
-        self._resources_dict = self._get_dict_of_resources()
 
-        if 'T' in datetime_str:
-            self._datetime = datetime.strptime(datetime_str,
-                                              '%Y-%m-%dT%H:%M:%S.%f')
-        else:
-            self._datetime = datetime.strptime(datetime_str,
-                                              '%Y-%m-%d %H:%M:%S.%f')
-
-        self._method = method_str.strip()
-        self._owner = owner_str.strip()
-
-        if doi_str is None:
-            self._doi = self.package_purl
-        else:
-            self._doi = doi_str.strip()
-
-    def _get_dict_of_resources(self):
-        """
-        Return the dict data package resources without the reflexive package
-        resource.
-
-        :return: Resources as dict of resources
-        """
-        resources = []
-        resources_dict = {properties.METADATA: '',
-                         properties.DATA: [],
-                         }
-        url = self.package_purl
-        try:
-            r = requests.get(url=url)
-            if r.status_code == requests.codes.ok:
-                resources = r.text.split()
-        except (requests.exceptions.RequestException,
-                requests.exceptions.BaseHTTPError,
-                requests.exceptions.HTTPError,
-                requests.exceptions.ConnectionError) as e:
-            logger.error(e)
-
-        for resource in resources:
-            if properties.METADATA_PATTERN in resource:
-                resources_dict[properties.METADATA] = resource
-            elif properties.DATA_PATTERN in resource:
-                resources_dict[properties.DATA].append(resource)
-            elif properties.REPORT_PATTERN in resource:
-                # Report resources are considered data
-                resources_dict[properties.DATA].append(resource)
-
-        return resources_dict
+    def __init__(self, event=None):
+        self._datetime = event.datetime
+        self._doi = event.doi.strip()
+        self._method = event.method.strip()
+        self._owner = event.owner.strip()
+        self._package = event.package.strip()
+        self._scope, self._identifier, self._revision = self._package.split('.')
+        self._package_path = self._package.replace('.', '/')
+        self._resources = resources(self.package_url, self._owner)
+        self._public = assert_package_is_public(self._resources)
 
     @property
     def datetime(self):
@@ -93,7 +51,7 @@ class Package(object):
 
     @property
     def identifier(self):
-        return self._identifier
+        return int(self._identifier)
 
     @property
     def method(self):
@@ -108,36 +66,98 @@ class Package(object):
         return self._package_path
 
     @property
-    def package_purl(self):
+    def package_url(self):
         return properties.PASTA_BASE_URL + 'eml/' + self._package_path
 
     @property
-    def package_str(self):
-        return self._package_str
+    def package(self):
+        return self._package
 
     @property
     def public(self):
-        resource = self._resources_dict[properties.METADATA]
-        r = Resource(resource=resource)
-        if not r.public:
-            return False
-        for resource in self._resources_dict[properties.DATA]:
-            r = Resource(resource=resource)
-            if not r.public:
-                return False
-        return True
+        return self._public
 
     @property
     def resources(self):
-        return self._resources_dict
+        return self._resources
 
     @property
     def revision(self):
-        return self._revision
+        return int(self._revision)
 
     @property
     def scope(self):
         return self._scope
+
+
+def assert_package_is_public(resources):
+    """
+    Asserts that the complete PASTA data package is publicly accessible
+
+    :param resources: List of resources
+    :return: Boolean
+    """
+    resource = resources[properties.METADATA]
+    if not assert_resource_is_public(resource.url):
+        return False
+
+    resource = resources[properties.REPORT]
+    if not assert_resource_is_public(resource.url):
+        return False
+
+    for resource in resources[properties.DATA]:
+        if not assert_resource_is_public(resource.url):
+            return False
+    return True
+
+
+def assert_resource_is_public(resource_url):
+    """
+    Asserts that the give PASTA resource is publicly accessible
+
+    :param resource_url: The resource URL
+    :return: Boolean
+    """
+    public = False
+    url = properties.PASTA_BASE_URL + 'authz?resourceId=' + resource_url
+    r = adapter_utilities.requests_get_url_wrapper(url=url)
+    if r is not None:
+        public = True
+    return public
+
+
+def resources(package_map_url, principal_owner):
+    """
+    Return a dict of data package resources without the reflexive package
+    resource.
+
+    :param package_map_url: PASTA package resource map url
+    :return: Dict of resource URLs
+    """
+    resources = {properties.METADATA: '',
+                 properties.REPORT: '',
+                 properties.DATA: []}
+
+    url = package_map_url
+    r = adapter_utilities.requests_get_url_wrapper(url=url)
+    resource_urls = r.text.split()
+    for resource_url in resource_urls:
+        if properties.METADATA_PATTERN in resource_url:
+            rm = ResourceMetadata(url=resource_url,
+                                  type=properties.METADATA,
+                                  owner=principal_owner)
+            resources[properties.METADATA] = rm
+        elif properties.REPORT_PATTERN in resource_url:
+            rr = ResourceReport(url=resource_url,
+                                type=properties.REPORT,
+                                owner=principal_owner)
+            resources[properties.REPORT] = rr
+        elif properties.DATA_PATTERN in resource_url:
+            rd = ResourceData(url=resource_url,
+                              type=properties.DATA,
+                              owner=principal_owner)
+            resources[properties.DATA].append(rd)
+    return resources
 
 
 def main():
