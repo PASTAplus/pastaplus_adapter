@@ -51,14 +51,16 @@ class TestSysMeta(unittest.TestCase):
 
     def test_d1_sys_meta(self):
         sys_meta = SysMeta()
-        sys_meta.identifier = TestSysMeta.resource_id
-        sys_meta.size = 48857
-        sys_meta.file_name = 'LTER.NIN.DWS.csv'
-        sys_meta.format_identifier = 'eml://ecoinformatics.org/eml-2.0.1'
-        sys_meta.rights_holder = properties.DEFAULT_RIGHTS_HOLDER
+
+        sys_meta.access_policy = TestSysMeta.access_policy
         sys_meta.checksum_value = 'e67809cb59c51ee456069e4cdb22bf2a7fb484b1'
         sys_meta.checksum_algorithm = 'SHA-1'
-        sys_meta.access_policy = TestSysMeta.access_policy
+        sys_meta.file_name = 'LTER.NIN.DWS.csv'
+        sys_meta.format_identifier = 'eml://ecoinformatics.org/eml-2.0.1'
+        sys_meta.identifier = TestSysMeta.resource_id
+        sys_meta.rights_holder = properties.DEFAULT_RIGHTS_HOLDER
+        sys_meta.size = 48857
+
         d1_sys_meta = sys_meta.d1_sys_meta()
         xml = d1_sys_meta.toxml()
         print(xml)
