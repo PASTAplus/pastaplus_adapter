@@ -106,14 +106,17 @@ class SysMeta(object):
         self._assert_complete_sys_meta()
 
         d1_sys_meta = dataoneTypes_v2_0.systemMetadata()
-        d1_sys_meta.identifier = self._identifier
-        d1_sys_meta.size = self._size
-        d1_sys_meta.fileName = self._file_name
-        d1_sys_meta.formatId = self._format_identifier
-        d1_sys_meta.rightsHolder = self._rights_holder
+
+        d1_sys_meta.accessPolicy = self.d1_access_policy(self._access_policy)
         d1_sys_meta.checksum = dataoneTypes_v_1.Checksum(self._checksum_value)
         d1_sys_meta.checksum.algorithm = self._checksum_algorithm
-        d1_sys_meta.accessPolicy = self.d1_access_policy(self._access_policy)
+        d1_sys_meta.fileName = self._file_name
+        d1_sys_meta.formatId = self._format_identifier
+        d1_sys_meta.identifier = self._identifier
+        d1_sys_meta.replicationPolicy = self._replication_policy
+        d1_sys_meta.rightsHolder = self._rights_holder
+        d1_sys_meta.size = self._size
+
         return d1_sys_meta
 
     @property
