@@ -42,43 +42,39 @@ class TestPackage(unittest.TestCase):
     url = properties.PASTA_BASE_URL
 
     def setUp(self):
-        self.package = Package(package_str=TestPackage.package_str,
-                               datetime_str=TestPackage.datetime_str,
-                               method_str=TestPackage.method_str,
-                               owner_str=TestPackage.owner_str,
-                               doi_str=TestPackage.doi_str)
+        self.package = Package(event=Event())
 
     def tearDown(self):
         pass
 
-    def test_get_package(self):
-        package = self.package.package_str
+    def test_package(self):
+        package = self.package.package
         self.assertEqual(TestPackage.package_str, package)
 
-    def test_get_scope(self):
+    def test_scope(self):
         scope = self.package.scope
         self.assertEqual(TestPackage.scope, scope)
 
-    def test_get_identifier(self):
+    def test_identifier(self):
         identifier = self.package.identifier
         self.assertEqual(TestPackage.identifier, identifier)
 
-    def test_get_revision(self):
+    def test_revision(self):
         revision = self.package.revision
         self.assertEqual(TestPackage.revision, revision)
 
-    def test_get_datetime(self):
+    def test_datetime(self):
         datetime = self.package.datetime
         self.assertEqual(TestPackage.datetime, datetime)
         datetime_str = datetime.strftime('%Y-%m-%dT%H:%M:%S.%f').rstrip('0')
         self.assertEqual(TestPackage.datetime_str, datetime_str)
 
-    def test_get_method(self):
+    def test_method(self):
         method_str = self.package.method
         self.assertEqual(TestPackage.method_str, method_str)
 
-    def test_get_resources(self):
-        cnt = 1 # Begin with cnt = 1 for single metadata resource
+    def test_resources(self):
+        cnt = 2 # Begin with 2 metadata and report resources
         resources = self.package.resources
         cnt += len(resources[properties.DATA])
         self.assertEqual(TestPackage.number_of_resources, cnt)
@@ -88,6 +84,20 @@ class TestPackage(unittest.TestCase):
 
     def test_get_doi(self):
         self.assertEqual(TestPackage.doi, self.package.doi)
+
+
+class Event(object):
+    """
+    Mock class to simulate a database recorded PASTA event from the
+    adapter_queue.sqlite database.
+    """
+    def __init__(self):
+        self.package = 'knb-lter-nin.1.1'
+        self.datetime = datetime.strptime('2017-02-23T13:09:29.166',
+                                          '%Y-%m-%dT%H:%M:%S.%f')
+        self.method = 'createDataPackage'
+        self.owner = 'uid=LNO,o=LTER,dc=ecoinformatics,dc=org'
+        self.doi = 'doi:10.6073/pasta/3bcc89b2d1a410b7a2c678e3c55055e1'
 
 
 if __name__ == '__main__':
