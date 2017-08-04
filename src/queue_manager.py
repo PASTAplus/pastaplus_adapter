@@ -56,18 +56,6 @@ class QueueManager(object):
         Session = sessionmaker(bind=engine)
         self.session = Session()
 
-    def _event_2_package(self, event=None):
-        """Convert a database event record into a Package object.
-
-        :param event: -- the database event record
-        :return: -- the Package object
-        """
-        datetime_str = event.datetime.strftime('%Y-%m-%dT%H:%M:%S.%f').rstrip(
-            '0')
-        return Package(package_str=event.package, datetime_str=datetime_str,
-                       method_str=event.method, owner_str=event.owner,
-                       doi_str=event.doi)
-
     def delete_queue(self):
         os.remove(self.queue)
 
@@ -101,12 +89,10 @@ class QueueManager(object):
             logger.error('{e} - {package_str}'.format(e=e, package_str=ps))
 
     def get_head(self):
-        package = None
         event = self.session.query(Queue).filter(
             Queue.dequeued == False).order_by(Queue.datetime).first()
         if event:
-            package = self._event_2_package(event=event)
-        return package
+            return Package(event=event)
 
     def get_last_datetime(self):
         datetime = None
@@ -132,8 +118,8 @@ class QueueManager(object):
         """
         Return the first predecessor of the event package
 
-        :param event_package: package instance of event package
-        :return: predecessor as package instance or None if none found
+        :param event_package: Package instance of event package
+        :return: Predecessor as package instance or None if none found
         """
         predecessor = None
         scope = event_package.scope
@@ -144,7 +130,7 @@ class QueueManager(object):
                     Queue.revision < revision).order_by(
                     desc(Queue.revision)).first()
         if event:
-            predecessor = self._event_2_package(event=event)
+            predecessor = Package(event=event)
         return predecessor
 
 
