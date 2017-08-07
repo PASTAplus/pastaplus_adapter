@@ -143,19 +143,13 @@ def resources(package_map_url, principal_owner):
     resource_urls = r.text.split()
     for resource_url in resource_urls:
         if properties.METADATA_PATTERN in resource_url:
-            rm = ResourceMetadata(url=resource_url,
-                                  type=properties.METADATA,
-                                  owner=principal_owner)
+            rm = ResourceMetadata(url=resource_url, owner=principal_owner)
             resources[properties.METADATA] = rm
         elif properties.REPORT_PATTERN in resource_url:
-            rr = ResourceReport(url=resource_url,
-                                type=properties.REPORT,
-                                owner=principal_owner)
+            rr = ResourceReport(url=resource_url, owner=principal_owner)
             resources[properties.REPORT] = rr
         elif properties.DATA_PATTERN in resource_url:
-            rd = ResourceData(url=resource_url,
-                              type=properties.DATA,
-                              owner=principal_owner)
+            rd = ResourceData(url=resource_url, owner=principal_owner)
             resources[properties.DATA].append(rd)
     return resources
 
