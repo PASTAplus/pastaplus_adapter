@@ -43,7 +43,7 @@ class ResourceBase(object):
         self._rights_holder = owner
         self._size = None
         self._url = url
-        self._vendor_specific_header = {'VENDOR-GMN-REMOTE-URL': url}
+        self._vendor_specific_header = None
 
     def _get_checksum_value(self, path, replacement):
         """
@@ -145,6 +145,7 @@ class ResourceMetadata(ResourceBase):
         self._acl = self._get_acl('/metadata/eml/', '/metadata/acl/eml/')
         self._format_identifier = self._get_format_id()
         self._size = self._get_size()
+        self._vendor_specific_header = {'VENDOR-GMN-REMOTE-URL': url}
 
     def _get_format_id(self):
         d1_formats = adapter_utilities.get_d1_formats()
@@ -175,6 +176,7 @@ class ResourceReport(ResourceBase):
         self._acl = self._get_acl('/report/eml/', '/report/acl/eml/')
         self._format_identifier = self._get_format_id()
         self._size = self._get_size()
+        self._vendor_specific_header = {'VENDOR-GMN-REMOTE-URL': url}
 
     def _get_format_id(self):
         return 'text/xml'
@@ -197,6 +199,7 @@ class ResourceData(ResourceBase):
         self._acl = self._get_acl('/data/eml/', '/data/acl/eml/')
         self._format_identifier = self._get_format_id()
         self._size = self._get_size()
+        self._vendor_specific_header = {'VENDOR-GMN-REMOTE-URL': url}
 
     def _get_format_id(self):
         d1_formats = adapter_utilities.get_d1_formats()
