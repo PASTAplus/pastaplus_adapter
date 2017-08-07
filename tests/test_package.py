@@ -40,50 +40,55 @@ class TestPackage(unittest.TestCase):
 
     doi = 'doi:10.6073/pasta/3bcc89b2d1a410b7a2c678e3c55055e1'
     url = properties.PASTA_BASE_URL
+    package = None
+
+    @classmethod
+    def setUpClass(cls):
+        TestPackage.package = Package(event=Event())
 
     def setUp(self):
-        self.package = Package(event=Event())
+        pass
 
     def tearDown(self):
         pass
 
     def test_package(self):
-        package = self.package.package
+        package = TestPackage.package.package
         self.assertEqual(TestPackage.package_str, package)
 
     def test_scope(self):
-        scope = self.package.scope
+        scope = TestPackage.package.scope
         self.assertEqual(TestPackage.scope, scope)
 
     def test_identifier(self):
-        identifier = self.package.identifier
+        identifier = TestPackage.package.identifier
         self.assertEqual(TestPackage.identifier, identifier)
 
     def test_revision(self):
-        revision = self.package.revision
+        revision = TestPackage.package.revision
         self.assertEqual(TestPackage.revision, revision)
 
     def test_datetime(self):
-        datetime = self.package.datetime
+        datetime = TestPackage.package.datetime
         self.assertEqual(TestPackage.datetime, datetime)
         datetime_str = datetime.strftime('%Y-%m-%dT%H:%M:%S.%f').rstrip('0')
         self.assertEqual(TestPackage.datetime_str, datetime_str)
 
     def test_method(self):
-        method_str = self.package.method
+        method_str = TestPackage.package.method
         self.assertEqual(TestPackage.method_str, method_str)
 
     def test_resources(self):
         cnt = 2 # Begin with 2 metadata and report resources
-        resources = self.package.resources
+        resources = TestPackage.package.resources
         cnt += len(resources[properties.DATA])
         self.assertEqual(TestPackage.number_of_resources, cnt)
 
     def test_public(self):
-        self.assertTrue(self.package.public)
+        self.assertTrue(TestPackage.package.public)
 
     def test_get_doi(self):
-        self.assertEqual(TestPackage.doi, self.package.doi)
+        self.assertEqual(TestPackage.doi, TestPackage.package.doi)
 
 
 class Event(object):
