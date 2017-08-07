@@ -38,8 +38,8 @@ class Package(object):
         self._package = event.package.strip()
         self._scope, self._identifier, self._revision = self._package.split('.')
         self._package_path = self._package.replace('.', '/')
-        self._resources = resources(self.package_url, self._owner)
-        self._public = assert_package_is_public(self._resources)
+        self._resources = _build_resource_list(self.package_url, self._owner)
+        self._public = _assert_package_is_public(self._resources)
 
     @property
     def datetime(self):
@@ -90,7 +90,7 @@ class Package(object):
         return self._scope
 
 
-def assert_package_is_public(resources):
+def _assert_package_is_public(resources):
     """
     Asserts that the complete PASTA data package is publicly accessible
 
@@ -98,20 +98,20 @@ def assert_package_is_public(resources):
     :return: Boolean
     """
     resource = resources[properties.METADATA]
-    if not assert_resource_is_public(resource.url):
+    if not _assert_resource_is_public(resource.url):
         return False
 
     resource = resources[properties.REPORT]
-    if not assert_resource_is_public(resource.url):
+    if not _assert_resource_is_public(resource.url):
         return False
 
     for resource in resources[properties.DATA]:
-        if not assert_resource_is_public(resource.url):
+        if not _assert_resource_is_public(resource.url):
             return False
     return True
 
 
-def assert_resource_is_public(resource_url):
+def _assert_resource_is_public(resource_url):
     """
     Asserts that the give PASTA resource is publicly accessible
 
@@ -126,12 +126,13 @@ def assert_resource_is_public(resource_url):
     return public
 
 
-def resources(package_map_url, principal_owner):
+def _build_resource_list(package_map_url, principal_owner):
     """
     Return a dict of data package resources without the reflexive package
     resource.
 
     :param package_map_url: PASTA package resource map url
+    :param principal_owner: PASTA package principal owner
     :return: Dict of resource URLs
     """
     resources = {properties.METADATA: '',
