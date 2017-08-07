@@ -23,60 +23,51 @@ import unittest
 from datetime import datetime
 
 import properties
-from resource import Resource
-from package import Package
+from resource import ResourceMetadata
+from resource import ResourceReport
+from resource import ResourceData
 
 logger = logging.getLogger('test_resource')
 
 
 class TestResource(unittest.TestCase):
-    metadata_resource = properties.PASTA_BASE_URL + \
-                        'metadata/eml/knb-lter-nin/1/1'
     package_str = 'knb-lter-nin.1.1'
     scope = 'knb-lter-nin'
     identifier = 1
     revision = 1
     datetime_str = '2017-02-23T13:09:29.166'
     datetime = datetime.strptime(datetime_str, '%Y-%m-%dT%H:%M:%S.%f')
-    method_str = 'createDataPackage'
-    owner_str = 'uid=LNO,o=LTER,dc=ecoinformatics,dc=org'
+    method = 'createDataPackage'
+    owner = 'uid=LNO,o=LTER,dc=ecoinformatics,dc=org'
     doi = 'doi:10.6073/pasta/3bcc89b2d1a410b7a2c678e3c55055e1'
     url = properties.PASTA_BASE_URL
     scimeta_size = 48856 # For https://pasta-d.lternet.edu/package/metadata/eml/knb-lter-nin/1/1
 
+    metadata_resource = properties.PASTA_BASE_URL + \
+                        'metadata/eml/knb-lter-nin/1/1'
+    report_resource = properties.PASTA_BASE_URL + 'report/eml/knb-lter-nin/1/1'
+    data_resource = properties.PASTA_BASE_URL + \
+                    'data/eml/knb-lter-nin/1/1/67e99349d1666e6f4955e9dda42c3cc2'
+
     def setUp(self):
-        self.package = Package(package_str=TestResource.package_str,
-                               datetime_str=TestResource.datetime_str,
-                               method_str=TestResource.method_str,
-                               owner_str=TestResource.owner_str)
+        pass
 
     def tearDown(self):
         pass
 
-    def test_build_system_metadata(self):
-        resources = []
-        resources.append(self.package.resources[properties.METADATA])
-        for resource in self.package.resources[properties.DATA]:
-            resources.append(resource)
+    def testResourceMetadata(self):
+        rm = ResourceMetadata(url=TestResource.metadata_resource,
+                              owner=TestResource.owner)
+        self.assertIsNotNone(rm)
 
-        for resource in resources:
-            r = Resource(resource=resource)
-            sysmeta = r.get_d1_sysmeta(
-                principal_owner=self.package.owner)
-            self.assertEqual(resource, sysmeta.identifier.value())
-            print(sysmeta.toxml())
+    def test_build_system_metadata(self):
+        rm = ResourceMetadata(url=TestResource.metadata_resource,
+                              owner=TestResource.owner)
+        sm = rm.get_d1_sys_meta()
+        self.assertIsNotNone(sm)
 
     def test_get_science_metadata(self):
-        resources = []
-        resources.append(self.package.resources[properties.METADATA])
-        for resource in self.package.resources[properties.DATA]:
-            resources.append(resource)
-
-        for resource in resources:
-            r = Resource(resource=resource)
-            scimeta = r.get_science_metadata()
-            self.assertEqual(self.scimeta_size, len(scimeta))
-
+        pass
 
 
 if __name__ == '__main__':
