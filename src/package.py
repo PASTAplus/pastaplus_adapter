@@ -33,7 +33,7 @@ class Package(object):
     def __init__(self, event=None):
         self._datetime = event.datetime
         self._doi = event.doi.strip()
-        self._method = event.method.strip()
+        self._event = event.method.strip()
         self._owner = event.owner.strip()
         self._package = event.package.strip()
         self._scope, self._identifier, self._revision = self._package.split('.')
@@ -50,12 +50,12 @@ class Package(object):
         return self._doi
 
     @property
-    def identifier(self):
-        return int(self._identifier)
+    def event(self):
+        return self._event
 
     @property
-    def method(self):
-        return self._method
+    def identifier(self):
+        return int(self._identifier)
 
     @property
     def owner(self):
