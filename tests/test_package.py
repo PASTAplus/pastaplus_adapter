@@ -33,7 +33,7 @@ class TestPackage(unittest.TestCase):
     revision = 1
     datetime_str = '2017-02-23T13:09:29.166'
     datetime = datetime.strptime(datetime_str, '%Y-%m-%dT%H:%M:%S.%f')
-    method_str = 'createDataPackage'
+    event_str = 'createDataPackage'
     owner_str = 'uid=LNO,o=LTER,dc=ecoinformatics,dc=org'
     doi_str = 'doi:10.6073/pasta/3bcc89b2d1a410b7a2c678e3c55055e1'
     number_of_resources = 3
@@ -74,9 +74,9 @@ class TestPackage(unittest.TestCase):
         datetime_str = datetime.strftime('%Y-%m-%dT%H:%M:%S.%f').rstrip('0')
         self.assertEqual(TestPackage.datetime_str, datetime_str)
 
-    def test_method(self):
-        method_str = TestPackage.package.method
-        self.assertEqual(TestPackage.method_str, method_str)
+    def test_event(self):
+        event_str = TestPackage.package.event
+        self.assertEqual(TestPackage.event_str, event_str)
 
     def test_resources(self):
         cnt = 2 # Begin with 2 metadata and report resources
