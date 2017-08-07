@@ -104,6 +104,12 @@ class ResourceBase(object):
         return accessPolicy
 
     def get_d1_sys_meta(self):
+        """
+        Return a D1 system metadata object for the given resource as pyxb
+        object.
+
+        :return: D1 system metadata as a pyxb object
+        """
         sm = SysMeta()
         sm.access_policy = self._acl
         sm.checksum_algorithm = self._checksum_algorithm
