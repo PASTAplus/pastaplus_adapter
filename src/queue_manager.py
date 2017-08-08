@@ -16,12 +16,14 @@
 
 import os
 import logging
+from datetime import datetime
 
 from sqlalchemy import Column, Integer, String, DateTime, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 from sqlalchemy import desc
+from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -59,16 +61,19 @@ class QueueManager(object):
     def delete_queue(self):
         os.remove(self.queue)
 
-    def enqueue(self, event_package=None):
+    def enqueue(self, event=None):
+
+        scope, identifier, revision = event.package.split('.')
+
         event = Queue(
-            package=event_package.package_str,
-            scope=event_package.scope,
-            identifier=event_package.identifier,
-            revision=event_package.revision,
-            method=event_package.method,
-            datetime=event_package.datetime,
-            owner=event_package.owner,
-            doi=event_package.doi
+            package=event.package,
+            scope=scope,
+            identifier=identifier,
+            revision=revision,
+            method=event.method,
+            datetime=event.datetime,
+            owner=event.owner,
+            doi=event.doi
         )
         try:
             self.session.add(event)
@@ -77,61 +82,55 @@ class QueueManager(object):
             logger.error(e)
             self.session.rollback()
 
-    def dequeue(self, event_package=None):
+    def dequeue(self, package=None, method=None):
         try:
             event = self.session.query(Queue).filter(
-                Queue.package == event_package.package_str,
-                Queue.method == event_package.method).one()
+                Queue.package == package,
+                Queue.method == method).one()
             event.dequeued = True
             self.session.commit()
         except NoResultFound as e:
-            ps = event_package.package_str
-            logger.error('{e} - {package_str}'.format(e=e, package_str=ps))
+            p = package
+            logger.error('{e} - {p}'.format(e=e, p=p))
+
+    def get_count(self):
+        return self.session.query(func.count(Queue.package)).scalar()
 
     def get_head(self):
-        event = self.session.query(Queue).filter(
+        return self.session.query(Queue).filter(
             Queue.dequeued == False).order_by(Queue.datetime).first()
-        if event:
-            return Package(event=event)
 
     def get_last_datetime(self):
         datetime = None
         event = self.session.query(Queue).order_by(desc(Queue.datetime)).first()
-        if event:
-            datetime = event.datetime.strftime('%Y-%m-%dT%H:%M:%S.%f').rstrip(
-                '0')
+        if event is not None:
+            datetime = event.datetime
         return datetime
 
-    def is_dequeued(self, event_package=None):
+    def is_dequeued(self, package=None, method=None):
         dequeued = None
         try:
             event = self.session.query(Queue).filter(
-                Queue.package == event_package.package_str,
-                Queue.method == event_package.method).one()
+                Queue.package == package,
+                Queue.method == method).one()
             dequeued = event.dequeued
         except NoResultFound as e:
-            ps = event_package.package_str
-            logger.error('{e} - {package_str}'.format(e=e, package_str=ps))
+            p = package
+            logger.error('{e} - {p}'.format(e=e, p=p))
         return dequeued
 
-    def get_predecessor(self, event_package=None):
+    def get_predecessor(self, package=None):
         """
         Return the first predecessor of the event package
 
         :param event_package: Package instance of event package
         :return: Predecessor as package instance or None if none found
         """
-        predecessor = None
-        scope = event_package.scope
-        identifier = event_package.identifier
-        revision = event_package.revision
-        event = self.session.query(Queue).filter(Queue.scope == scope,
+        scope, identifier, revision = package.split('.')
+        return self.session.query(Queue).filter(Queue.scope == scope,
                     Queue.identifier == identifier,
                     Queue.revision < revision).order_by(
                     desc(Queue.revision)).first()
-        if event:
-            predecessor = Package(event=event)
-        return predecessor
 
 
 def main():

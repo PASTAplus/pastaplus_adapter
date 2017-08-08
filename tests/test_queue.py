@@ -14,20 +14,22 @@ from __future__ import print_function
     3/3/17
 """
 
+from datetime import datetime
 import logging
+import unittest
+
+from event import Event
+from package import Package
+from queue_manager import QueueManager
 
 logging.basicConfig(format='%(asctime)s %(levelname)s (%(name)s): %(message)s',
                     datefmt='%Y-%m-%d %H:%M:%S%z', level=logging.INFO)
-
-import unittest
-
-from queue_manager import QueueManager
-from package import Package
 
 logger = logging.getLogger('test_queue')
 
 
 class TestAdapterQueue(unittest.TestCase):
+
     def setUp(self):
         self.qm = QueueManager(queue='test_adapter_queue.sqlite')
         self.build_packages()
@@ -36,95 +38,114 @@ class TestAdapterQueue(unittest.TestCase):
         self.qm.delete_queue()
 
     def test_enqueue(self):
-        self.qm.enqueue(event_package=self.packages[0])
-        self.assertFalse(self.qm.is_dequeued(event_package=self.packages[0]))
+        e = Event()
+        e.package = 'edi.3.2'
+        e.datetime = '2017-01-03T14:30:56.673000'
+        e.method = 'createDataPackage'
+        e.owner = 'uid=SBC,o=LTER,dc=ecoinformatics,dc=org'
+        e.doi = 'doi:10.5072/FK2/381addd8bfda02f8ba85329df8f903dc'
+        self.qm.enqueue(event=e)
+        self.assertEquals(self.qm.get_count(),1)
 
     def test_get_head(self):
         self.enqueue_all()
-        package = self.qm.get_head()
-        self.assertEqual(self.packages[0].package_str,
-                         package.package_str)
+        e = self.qm.get_head()
+        self.assertEquals(e.package, self.events[0].package)
 
     def test_dequeue(self):
         self.enqueue_all()
-        package_head = self.qm.get_head()
-        self.qm.dequeue(event_package=package_head)
-        self.assertTrue(self.qm.is_dequeued(event_package=package_head))
+        e = self.qm.get_head()
+        self.qm.dequeue(package=e.package, method=e.method)
+        e = self.qm.get_head()
+        self.assertEquals(e.package, self.events[1].package)
 
     def test_get_last_datetime(self):
         self.enqueue_all()
-        datetime_str = self.qm.get_last_datetime()
-        self.assertEqual(self.packages[5].datetime.strftime(
-            '%Y-%m-%dT%H:%M:%S.%f').rstrip('0'), datetime_str)
+        datetime = self.qm.get_last_datetime()
+        self.assertEqual(self.events[9].datetime, datetime)
 
     def test_get_predecessor(self):
         self.enqueue_all()
-        package = self.packages[4]
-        predecessor = self.qm.get_predecessor(package)
-        print(predecessor.package_str)
-        pass
+        e = self.events[5]
+        p = self.qm.get_predecessor(package=e.package)
+        self.assertEqual(self.events[4].package, p.package)
 
     def build_packages(self):
-        package_str1 = 'knb-lter-nin.12.14'
-        datetime_str1 = '2016-12-12T03:09:29.166'
-        method_str1 = 'createDataPackage'
-        owner_str1 = 'uid=EDI,o=LTER,dc=ecoinformatics,dc=org'
-        package1 = Package(package_str=package_str1,
-                           datetime_str=datetime_str1,
-                           method_str=method_str1,
-                           owner_str=owner_str1)
+        e0 = Event()
+        e0.package = 'edi.3.2'
+        e0.datetime = '2017-01-03T14:30:56.673000'
+        e0.method = 'createDataPackage'
+        e0.owner = 'uid=SBC,o=LTER,dc=ecoinformatics,dc=org'
+        e0.doi = 'doi:10.5072/FK2/381addd8bfda02f8ba85329df8f903dc'
 
-        package_str2 = 'edi.1.1'
-        datetime_str2 = '2017-01-03T18:23:29.3245'
-        method_str2 = 'createDataPackage'
-        owner_str2 = 'uid=EDI,o=LTER,dc=ecoinformatics,dc=org'
-        package2 = Package(package_str=package_str2,
-                           datetime_str=datetime_str2,
-                           method_str=method_str2,
-                           owner_str=owner_str2)
+        e1 = Event()
+        e1.package = 'edi.3002.1'
+        e1.datetime = '2017-06-02T17:46:57.154000'
+        e1.method = 'createDataPackage'
+        e1.owner = 'uid=LNO,o=LTER,dc=ecoinformatics,dc=org'
+        e1.doi = 'doi:10.5072/FK2/55fcb5e7de4634cc332d4f874d0caf73'
 
-        package_str3 = 'edi.1.2'
-        datetime_str3 = '2017-01-23T04:27:02.125'
-        method_str3 = 'updateDataPackage'
-        owner_str3 = 'uid=EDI,o=LTER,dc=ecoinformatics,dc=org'
-        package3 = Package(package_str=package_str3,
-                           datetime_str=datetime_str3,
-                           method_str=method_str3,
-                           owner_str=owner_str3)
+        e2 = Event()
+        e2.package = 'edi.98.1'
+        e2.datetime = '2017-06-14T17:20:47.138000'
+        e2.method = 'createDataPackage'
+        e2.owner = 'uid=EDI,o=LTER,dc=ecoinformatics,dc=org'
+        e2.doi = 'doi:10.5072/FK2/0ffb0cde729f2e1bf97e9a7f7acc9d57'
 
-        package_str4 = 'knb-lter-nin.12.18'
-        datetime_str4 = '2017-02-23T13:09:29.166'
-        method_str4 = 'updateDataPackage'
-        owner_str4 = 'uid=EDI,o=LTER,dc=ecoinformatics,dc=org'
-        package4 = Package(package_str=package_str4,
-                           datetime_str=datetime_str4,
-                           method_str=method_str4,
-                           owner_str=owner_str4)
+        e3 = Event()
+        e3.package = 'edi.98.2'
+        e3.datetime = '2017-06-14T17:45:30.938000'
+        e3.method = 'updateDataPackage'
+        e3.owner = 'uid=EDI,o=LTER,dc=ecoinformatics,dc=org'
+        e3.doi = 'doi:10.5072/FK2/c21403aa2cf1fc0535b7a3a21f3b3852'
 
-        package_str5 = 'edi.1.3'
-        datetime_str5 = '2017-02-24T03:31:55.143'
-        method_str5 = 'updateDataPackage'
-        owner_str5 = 'uid=EDI,o=LTER,dc=ecoinformatics,dc=org'
-        package5 = Package(package_str=package_str5,
-                           datetime_str=datetime_str5,
-                           method_str=method_str5,
-                           owner_str=owner_str5)
+        e4 = Event()
+        e4.package = 'edi.98.3'
+        e4.datetime = '2017-06-14T18:31:31.549000'
+        e4.method = 'updateDataPackage'
+        e4.owner = 'uid=EDI,o=LTER,dc=ecoinformatics,dc=org'
+        e4.doi = 'doi:10.5072/FK2/586c753cc9adbc6102d0a3b458cbfb1c'
 
-        package_str6 = 'knb-lter-nin.12.18'
-        datetime_str6 = '2017-03-01T02:01:45.66'
-        method_str6 = 'deleteDataPackage'
-        owner_str6 = 'uid=EDI,o=LTER,dc=ecoinformatics,dc=org'
-        package6 = Package(package_str=package_str6,
-                           datetime_str=datetime_str6,
-                           method_str=method_str6,
-                           owner_str=owner_str6)
+        e5 = Event()
+        e5.package = 'edi.98.4'
+        e5.datetime = '2017-06-14T19:01:20.551000'
+        e5.method = 'updateDataPackage'
+        e5.owner = 'uid=EDI,o=LTER,dc=ecoinformatics,dc=org'
+        e5.doi = 'doi:10.5072/FK2/f6b49227664aaac91675a785e29bc12f'
 
-        self.packages = (package1, package2, package3, package4, package5,
-                         package6)
+        e6 = Event()
+        e6.package = 'edi.100.1'
+        e6.datetime = '2017-06-14T19:04:00.470000'
+        e6.method = 'createDataPackage'
+        e6.owner = 'uid=EDI,o=LTER,dc=ecoinformatics,dc=org'
+        e6.doi = 'doi:10.5072/FK2/d9b8652cd4f1a63935af87f19387351c'
+
+        e7 = Event()
+        e7.package = 'edi.100.2'
+        e7.datetime = '2017-06-14T19:09:20.009000'
+        e7.method = 'updateDataPackage'
+        e7.owner = 'uid=EDI,o=LTER,dc=ecoinformatics,dc=org'
+        e7.doi = 'doi:10.5072/FK2/2aa459937b15c7133a48828a54b9a249'
+
+        e8 = Event()
+        e8.package = 'edi.100.1'
+        e8.datetime = '2017-06-15T13:13:29.717000'
+        e8.method = 'deleteDataPackage'
+        e8.owner = 'uid=EDI,o=LTER,dc=ecoinformatics,dc=org'
+        e8.doi = 'doi:10.5072/FK2/d9b8652cd4f1a63935af87f19387351c'
+
+        e9 = Event()
+        e9.package = 'edi.100.2'
+        e9.datetime = '2017-06-15T13:13:29.717000'
+        e9.method = 'deleteDataPackage'
+        e9.owner = 'uid=EDI,o=LTER,dc=ecoinformatics,dc=org'
+        e9.doi = 'doi:10.5072/FK2/2aa459937b15c7133a48828a54b9a249'
+
+        self.events = (e0, e1, e2, e3, e4, e5, e6, e7, e8, e9)
 
     def enqueue_all(self):
-        for package in self.packages:
-            self.qm.enqueue(event_package=package)
+        for event in self.events:
+            self.qm.enqueue(event=event)
 
 
 if __name__ == '__main__':
