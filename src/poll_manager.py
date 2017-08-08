@@ -91,7 +91,7 @@ def parse(url=None, fromDate=None, toDate=None, scope=properties.SCOPE):
             event.doi = doi.text
 
             # Skip fromDate record(s) that already exist in queue
-            if fromDate == date:
+            if fromDate.rstrip('0') == date.text:
                 msg = 'Skipping: {} - {} - {}'.format(package.text, date.text,
                                                       method.text)
                 logger.warn(msg)
@@ -126,7 +126,7 @@ def main():
     url = properties.PASTA_BASE_URL + '/changes/eml?'
     qm = QueueManager()
 
-    fromDate = qm.get_last_datetime()
+    fromDate = datetime.strftime(qm.get_last_datetime(), '%Y-%m-%dT%H:%M:%S.%f')
     if not fromDate:
         bootstrap()
     else:
