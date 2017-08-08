@@ -23,10 +23,10 @@ import xml.etree.ElementTree as ET
 
 import requests
 
-from queue_manager import QueueManager
-from package import Package
+from event import Event
 from lock import Lock
 import properties
+from queue_manager import QueueManager
 
 
 logger = logging.getLogger('poll_manager')
@@ -53,7 +53,8 @@ def parse(url=None, fromDate=None, toDate=None, scope=properties.SCOPE):
     :param url: changes URL as a String
     :param fromDate: fromDate as a date formatted String '%Y-%m-%dT%H:%M:%S.%f'
     :param toDate: toDate as a data formatted String '%Y-%m-%dT%H:%M:%S.%f'
-    :param scope: scope filter value (only one) as a String
+    :param in_scope: in_scope filter value (only one) as a String for changes
+                     query
     :return: 0 if successful, 1 otherwise
     """
     if fromDate:
@@ -76,31 +77,35 @@ def parse(url=None, fromDate=None, toDate=None, scope=properties.SCOPE):
         qm = QueueManager()
         tree = ET.ElementTree(ET.fromstring(r.text.strip()))
         for dataPackage in tree.iter('dataPackage'):
-            packageId = dataPackage.find('./packageId')
-            datetime = dataPackage.find('./date')
+            package = dataPackage.find('./packageId')
+            date = dataPackage.find('./date')
             method = dataPackage.find('./serviceMethod')
             owner = dataPackage.find('./principal')
             doi = dataPackage.find('./doi')
-            p = packageId.text
-            d = datetime.text
-            m = method.text
-            o = owner.text
-            i = doi.text
+
+            event = Event()
+            event.package = package.text
+            event.datetime = date.text
+            event.method = method.text
+            event.owner = owner.text
+            event.doi = doi.text
 
             # Skip fromDate record(s) that already exist in queue
-            if fromDate == datetime.text:
-                logger.warn('Skipping: {p} - {d} - {m} - {i}'.format(p=p, d=d,
-                                                                     m=m, i=i))
+            if fromDate == date:
+                msg = 'Skipping: {} - {} - {}'.format(package.text, date.text,
+                                                      method.text)
+                logger.warn(msg)
             else:
-                package = Package(package_str=p, datetime_str=d, method_str=m,
-                                  owner_str=o, doi_str=i)
                 # Provide additional filter for multiple scope values
-                if package.scope in properties.PASTA_WHITELIST:
-                    logger.warn('Enqueue: {p} - {d} - {m} - {i}'.format(p=p, d=d,
-                                                                      m=m, i=i))
-                    qm.enqueue(event_package=package)
+                package_scope = event.package.split('.')[0]
+                if package_scope in properties.PASTA_WHITELIST:
+                    msg = 'Enqueue: {} - {} - {}'.format(package.text,
+                                                         date.text, method.text)
+                    logger.warn(msg)
+                    qm.enqueue(event=event)
                 else:
-                    logger.info('Package {p} out of scope'.format(p=p))
+                    logger.info('Package {} out of scope'.format(package.text))
+
         return 0
     else:
         logger.warn('Bad status code ({code}) for {url}'.format(
