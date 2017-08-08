@@ -5,7 +5,7 @@
 
 :Synopsis:
     Database model to support queueing objects from PASTA for use by the
-    EDI PASTA Adapter and the EDI member node instance of the DataONE GMN.
+    PASTA+ GMN Adapter.
  
 :Author:
     servilla
@@ -36,6 +36,9 @@ Base = declarative_base()
 
 
 class Queue(Base):
+    """
+    SQLAlchemy ORE for adapter queue
+    """
     __tablename__ = 'queue'
 
     package = Column(String, primary_key=True)
@@ -50,6 +53,9 @@ class Queue(Base):
 
 
 class QueueManager(object):
+    """
+    Queue management class for the adapter queue
+    """
     def __init__(self, queue=properties.QUEUE):
         self.queue = queue
         db = 'sqlite:///' + self.queue
@@ -59,10 +65,37 @@ class QueueManager(object):
         self.session = Session()
 
     def delete_queue(self):
+        """
+        Removes the sqlite database from the file system
+        :return:
+        """
         os.remove(self.queue)
 
-    def enqueue(self, event=None):
+    def dequeue(self, package=None, method=None):
+        """
+        Sets the PASTA event in the adapter queue to "dequeued"
 
+        :param package: The PASTA data package identifier
+        :param method: The PASTA event method type
+        :return: None
+        """
+        try:
+            event = self.session.query(Queue).filter(
+                Queue.package == package,
+                Queue.method == method).one()
+            event.dequeued = True
+            self.session.commit()
+        except NoResultFound as e:
+            p = package
+            logger.error('{e} - {p}'.format(e=e, p=p))
+
+    def enqueue(self, event=None):
+        """
+        Enters the PASTA event onto the adapter queue
+
+        :param event: Instance of utility Event class
+        :return: None
+        """
         scope, identifier, revision = event.package.split('.')
 
         event = Queue(
@@ -82,42 +115,51 @@ class QueueManager(object):
             logger.error(e)
             self.session.rollback()
 
-    def dequeue(self, package=None, method=None):
+    def get_count(self):
+        """
+        Returns the event record count of the adapter queue
+
+        :return: Event record count scalar
+        """
+        return self.session.query(func.count(Queue.package)).scalar()
+
+    def get_event(self, package=None, method=None):
+        """
+        Returns the adapter queue event record for the given package and method
+
+        :param package: The PASTA data package identifier
+        :param method: The PASTA event method type
+        :return: Adapter queue event record object
+        """
         try:
             event = self.session.query(Queue).filter(
                 Queue.package == package,
                 Queue.method == method).one()
-            event.dequeued = True
-            self.session.commit()
         except NoResultFound as e:
             p = package
             logger.error('{e} - {p}'.format(e=e, p=p))
 
-    def get_count(self):
-        return self.session.query(func.count(Queue.package)).scalar()
-
     def get_head(self):
+        """
+        Returns the head event record of the adapter queue (that is not set
+        to "dequeued")
+
+        :return: Head event record
+        """
         return self.session.query(Queue).filter(
             Queue.dequeued == False).order_by(Queue.datetime).first()
 
     def get_last_datetime(self):
+        """
+        Return the datetime of the last adapter queue entry
+
+        :return: Last datetime object of queue
+        """
         datetime = None
         event = self.session.query(Queue).order_by(desc(Queue.datetime)).first()
         if event is not None:
             datetime = event.datetime
         return datetime
-
-    def is_dequeued(self, package=None, method=None):
-        dequeued = None
-        try:
-            event = self.session.query(Queue).filter(
-                Queue.package == package,
-                Queue.method == method).one()
-            dequeued = event.dequeued
-        except NoResultFound as e:
-            p = package
-            logger.error('{e} - {p}'.format(e=e, p=p))
-        return dequeued
 
     def get_predecessor(self, package=None):
         """
@@ -131,6 +173,25 @@ class QueueManager(object):
                     Queue.identifier == identifier,
                     Queue.revision < revision).order_by(
                     desc(Queue.revision)).first()
+
+    def is_dequeued(self, package=None, method=None):
+        """
+        Returns boolean of dequeued status of the specific package and method
+
+        :param package: The PASTA data package identifier
+        :param method: The PASTA event method type
+        :return: Boolean of dequeued status
+        """
+        dequeued = None
+        try:
+            event = self.session.query(Queue).filter(
+                Queue.package == package,
+                Queue.method == method).one()
+            dequeued = event.dequeued
+        except NoResultFound as e:
+            p = package
+            logger.error('{e} - {p}'.format(e=e, p=p))
+        return dequeued
 
 
 def main():
