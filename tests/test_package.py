@@ -20,8 +20,9 @@ logging.basicConfig(format='%(asctime)s %(levelname)s (%(name)s): %(message)s',
 import unittest
 from datetime import datetime
 
-import properties
+from event import Event
 from package import Package
+import properties
 
 logger = logging.getLogger('test_package')
 
@@ -33,18 +34,23 @@ class TestPackage(unittest.TestCase):
     revision = 1
     datetime_str = '2017-02-23T13:09:29.166'
     datetime = datetime.strptime(datetime_str, '%Y-%m-%dT%H:%M:%S.%f')
-    event_str = 'createDataPackage'
-    owner_str = 'uid=LNO,o=LTER,dc=ecoinformatics,dc=org'
-    doi_str = 'doi:10.6073/pasta/3bcc89b2d1a410b7a2c678e3c55055e1'
+    method = 'createDataPackage'
+    owner = 'uid=LNO,o=LTER,dc=ecoinformatics,dc=org'
+    doi = 'doi:10.6073/pasta/3bcc89b2d1a410b7a2c678e3c55055e1'
     number_of_resources = 3
 
-    doi = 'doi:10.6073/pasta/3bcc89b2d1a410b7a2c678e3c55055e1'
     url = properties.PASTA_BASE_URL
     package = None
 
     @classmethod
     def setUpClass(cls):
-        TestPackage.package = Package(event=Event())
+        event = Event()
+        event.package = 'knb-lter-nin.1.1'
+        event.datetime = '2017-02-23T13:09:29.166'
+        event.method = 'createDataPackage'
+        event.owner = 'uid=LNO,o=LTER,dc=ecoinformatics,dc=org'
+        event.doi = 'doi:10.6073/pasta/3bcc89b2d1a410b7a2c678e3c55055e1'
+        TestPackage.package = Package(event=event)
 
     def setUp(self):
         pass
@@ -74,9 +80,9 @@ class TestPackage(unittest.TestCase):
         datetime_str = datetime.strftime('%Y-%m-%dT%H:%M:%S.%f').rstrip('0')
         self.assertEqual(TestPackage.datetime_str, datetime_str)
 
-    def test_event(self):
-        event_str = TestPackage.package.event
-        self.assertEqual(TestPackage.event_str, event_str)
+    def test_method(self):
+        method = TestPackage.package.method
+        self.assertEqual(TestPackage.method, method)
 
     def test_resources(self):
         cnt = 2 # Begin with 2 metadata and report resources
@@ -89,20 +95,6 @@ class TestPackage(unittest.TestCase):
 
     def test_get_doi(self):
         self.assertEqual(TestPackage.doi, TestPackage.package.doi)
-
-
-class Event(object):
-    """
-    Mock class to simulate a database recorded PASTA event from the
-    adapter_queue.sqlite database.
-    """
-    def __init__(self):
-        self.package = 'knb-lter-nin.1.1'
-        self.datetime = datetime.strptime('2017-02-23T13:09:29.166',
-                                          '%Y-%m-%dT%H:%M:%S.%f')
-        self.method = 'createDataPackage'
-        self.owner = 'uid=LNO,o=LTER,dc=ecoinformatics,dc=org'
-        self.doi = 'doi:10.6073/pasta/3bcc89b2d1a410b7a2c678e3c55055e1'
 
 
 if __name__ == '__main__':

@@ -15,10 +15,8 @@
 """
 
 import logging
-from datetime import datetime
 
-import requests
-
+from adapter_exceptions import AdapterIncompleteStateException
 import adapter_utilities
 import properties
 from resource import ResourceData
@@ -31,15 +29,19 @@ logger = logging.getLogger('package')
 class Package(object):
 
     def __init__(self, event=None):
-        self._datetime = event.datetime
-        self._doi = event.doi.strip()
-        self._event = event.method.strip()
-        self._owner = event.owner.strip()
-        self._package = event.package.strip()
-        self._scope, self._identifier, self._revision = self._package.split('.')
-        self._package_path = self._package.replace('.', '/')
-        self._resources = _build_resource_list(self.package_url, self._owner)
-        self._public = _assert_package_is_public(self._resources)
+        if event is not None:
+            self._datetime = event.datetime
+            self._doi = event.doi.strip()
+            self._method = event.method.strip()
+            self._owner = event.owner.strip()
+            self._package = event.package.strip()
+            self._scope, self._identifier, self._revision = self._package.split('.')
+            self._package_path = self._package.replace('.', '/')
+            self._resources = _build_resource_list(self.package_url, self._owner)
+            self._public = _assert_package_is_public(self._resources)
+        else:
+            msg = 'Package event is None'
+            raise(AdapterIncompleteStateException(msg))
 
     @property
     def datetime(self):
@@ -50,8 +52,8 @@ class Package(object):
         return self._doi
 
     @property
-    def event(self):
-        return self._event
+    def method(self):
+        return self._method
 
     @property
     def identifier(self):
