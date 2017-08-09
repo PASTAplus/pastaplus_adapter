@@ -38,7 +38,9 @@ class ResourceBase(object):
         self._file_name = None
         self._format_identifier = None
         self._identifier = url
+        self._object = None
         self._owner = owner
+        self._predecessor = None
         self._replication_policy = None
         self._rights_holder = owner
         self._size = None
@@ -123,6 +125,14 @@ class ResourceBase(object):
         return sm.d1_sys_meta()
 
     @property
+    def identifier(self):
+        return self._identifier
+
+    @property
+    def object(self):
+        return self._object
+
+    @property
     def owner(self):
         return self._owner
 
@@ -164,6 +174,16 @@ class ResourceMetadata(ResourceBase):
         if r is not None:
             size = int(r.headers['Content-Length'])
         return size
+
+    @property
+    def predecessor(self):
+        return self._predecessor
+
+    @predecessor.setter
+    def predecessor(self, pred):
+        identifier = properties.PASTA_BASE_URL + 'metadata/eml/' + \
+                     pred.replace('.', '/')
+        self._predecessor = identifier
 
 
 class ResourceReport(ResourceBase):
