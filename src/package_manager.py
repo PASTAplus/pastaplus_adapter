@@ -40,14 +40,6 @@ import properties
 logger = logging.getLogger('package_manager')
 
 
-def make_metadata_url(package_path=None):
-    return properties.PASTA_BASE_URL + 'metadata/eml/' + package_path
-
-
-def make_package_url(package_path=None):
-    return properties.PASTA_BASE_URL + 'eml/' + package_path
-
-
 def create_gmn_client():
     return d1_client.mnclient_2_0.MemberNodeClient_2_0(
         base_url=properties.GMN_BASE_URL,
@@ -73,9 +65,6 @@ def get_predecessor(queue_manager=None, package=None):
     return predecessor
 
 
-def is_metadata(resource=None):
-    return resource.get_type() == properties.METADATA
-
 
 def get_replication_policy(eml_xml=None):
     NAMESPACE_DICT = {
@@ -88,6 +77,86 @@ def get_replication_policy(eml_xml=None):
         "additionalMetadata/metadata/d1v1:replicationPolicy", NAMESPACE_DICT)
     if len(replicationPolicy_list):
         return ET.tostring(replicationPolicy_list[0])
+
+
+def gmn_create(resource=None):
+    logger.warn('Create: {}'.format(resource.identifier))
+    # gmn_client = create_gmn_client()
+    try:
+        # gmn_client.create(pid=resource.identifier,
+        #                   obj=StringIO.StringIO(resource.object),
+        #                   sysmeta_pyxb=resource.get_d1_sys_meta(),
+        #                   vendorSpecific=resource.vendor_specific_header)
+        pass
+    except Exception as e:
+        logger.error(e)
+
+
+def gmn_update(resource=None):
+    logger.warn('Update: {}'.format(resource.identifier))
+    # gmn_client = create_gmn_client()
+    try:
+        # gmn_client.update(pid=resource.predecessor_id
+        #                   obj=StringIO.StringIO(resource.object),
+        #                   newPid = resource.identifier,
+        #                   sysmeta_pyxb=resource.get_d1_sys_meta(),
+        #                   vendorSpecific=resource.vendor_specific_header)
+        pass
+    except Exception as e:
+        logger.error(e)
+
+
+def gmn_archive(resource=None):
+    logger.warn('Archive: {}'.format(resource.identifier))
+    # gmn_client = create_gmn_client()
+    try:
+        # gmn_client.archive(pid=resource.identifier)
+        pass
+    except Exception as e:
+        logger.error(e)
+
+
+def process_create_package(package=None):
+    r = package.resources
+    gmn_create(r[properties.METADATA])
+    gmn_create(r[properties.REPORT])
+    data_resources = r[properties.DATA]
+    for rd in data_resources:
+        gmn_create(rd)
+
+
+def process_update_package(package=None, queue_manager=None):
+
+    predecessor = queue_manager.get_predecessor(package.package)
+    while predecessor is not None:
+        p = Package(predecessor)
+        if p.public:
+            break
+        else:
+            predecessor = queue_manager.get_predecessor(predecessor.package)
+
+    r = package.resources
+    rm = r[properties.METADATA]
+
+    if predecessor is not None:
+        rm.predecessor = predecessor.package
+        gmn_update(rm)
+    else:
+        gmn_create(rm)
+
+    gmn_create(r[properties.REPORT])
+
+    data_resources = r[properties.DATA]
+    for rd in data_resources:
+        gmn_create(rd)
+
+def process_archive_package(package=None):
+    r = package.resources
+    gmn_archive(r[properties.METADATA])
+    gmn_archive(r[properties.REPORT])
+    data_resources = r[properties.DATA]
+    for rd in data_resources:
+        gmn_archive(rd)
 
 
 def main():
@@ -108,21 +177,19 @@ def main():
         if p.public:
             # gmn_client = create_gmn_client()
             logger.warn('Processing: {p}'.format(p=p.package))
-            resources = p.resources
             if p.method == properties.CREATE:
-                # TODO: Process package create
-                pass
+                process_create_package(package=p)
             elif p.method == properties.UPDATE:
-                # TODO: Process package update
-                pass
+                process_update_package(package=p, queue_manager=qm)
             elif p.method == properties.DELETE:
-                # TODO: Process package delete
-                pass
+                process_archive_package(package=p)
             else:
                 msg = 'Unrecognized package event "{event}" for' \
                       'package: {package}'.format(event=p.method,
                                                   package=p.package)
                 raise(AdapterIncompleteStateException(msg))
+        else:
+            logger.warn('Package not fully public: {p}'.format(p=p.package))
 
         qm.dequeue(package=p.package, method=p.method)
         head = qm.get_head()
