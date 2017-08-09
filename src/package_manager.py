@@ -6,7 +6,7 @@ from __future__ import print_function
 """:Mod: package_manager
 
 :Synopsis:
- 
+
 :Author:
     servilla
 
@@ -16,6 +16,7 @@ from __future__ import print_function
 
 import logging
 
+
 # Set level to WARN to avoid verbosity in requests at INFO
 logging.basicConfig(format='%(asctime)s %(levelname)s (%(name)s): %(message)s',
                     datefmt='%Y-%m-%d %H:%M:%S%z', level=logging.WARN)
@@ -24,10 +25,14 @@ import xml.etree.ElementTree as ET
 
 import d1_client.cnclient_2_0
 import d1_client.mnclient_2_0
-import d1_client.data_package
 
+from adapter_exceptions import AdapterIncompleteStateException
+from package import Package
 from queue_manager import QueueManager
-from resource import Resource
+from resource import ResourceMetadata
+from resource import ResourceReport
+from resource import ResourceData
+from resource import ResourceOre
 from resource_map import ResourceMap
 from lock import Lock
 import properties
@@ -96,104 +101,31 @@ def main():
         logger.warn('Lock file {} acquired'.format(lock.lock_file))
 
     qm = QueueManager()
-    package = qm.get_head()
-    while package is not None:
-        logger.warn('Active package: {p}'.format(p=package.package_str))
-        if package.public:
-            gmn_client = create_gmn_client()
-            logger.warn('Processing: {p}'.format(p=package.package_str))
-            resources = package.resources
-            if package.method in [properties.CREATE, properties.UPDATE]:
-                # Process science metadata
-                predecessor = get_predecessor(queue_manager=qm, package=package)
-                resource = resources[properties.METADATA]
-                r = Resource(resource)
-                scimeta = r.get_science_metadata().encode('utf-8').strip()
-                replication_policy = get_replication_policy(eml_xml=scimeta)
-                sysmeta = r.get_d1_sysmeta(principal_owner=package.owner)
-                header = r.get_vendorSpecific_header()
-                if predecessor:
-                    old_pid = make_metadata_url(predecessor.package_path)
-                    sysmeta.obsoletes = old_pid
-                    logger.warn('Update: {}<-{}'.format(old_pid, resource))
-                    try:
-                        gmn_client.update(pid=old_pid,
-                                          obj=StringIO.StringIO(),
-                                          newPid=resource,
-                                          sysmeta_pyxb=sysmeta,
-                                          vendorSpecific=header)
-                    except Exception as e:
-                        logger.error(e)
-                else:
-                    logger.warn('Create: {}'.format(resource))
-                    try:
-                        gmn_client.create(pid=resource,
-                                          obj=StringIO.StringIO(),
-                                          sysmeta_pyxb=sysmeta,
-                                          vendorSpecific=header)
-                    except Exception as e:
-                        logger.error(e)
-                # Process data entities
-                for resource in resources[properties.DATA]:
-                    r = Resource(resource)
-                    sysmeta = r.get_d1_sysmeta(principal_owner=package.owner)
-                    header = r.get_vendorSpecific_header()
-                    logger.warn('Create: {}'.format(resource))
-                    try:
-                        gmn_client.create(pid=resource,
-                                          obj=StringIO.StringIO(),
-                                          sysmeta_pyxb=sysmeta,
-                                          vendorSpecific=header)
-                    except Exception as e:
-                        logger.error(e)
-                resource_map = ResourceMap(package=package)
-                sysmeta = resource_map.get_resource_map_system_metadata()
-                rmap = resource_map.get_resource_map()
-                resource_map_pid = resource_map.get_resource_map_pid()
-                if predecessor:
-                    predecessor_pid = predecessor.doi
-                    if predecessor_pid is None:
-                        predecessor_pid = predecessor.package_purl
-                    old_pid = predecessor_pid
-                    sysmeta.obsoletes = old_pid
-                    logger.warn('Update: {}<-{}'.format(old_pid,
-                                                        resource_map_pid))
-                    try:
-                        gmn_client.update(pid=old_pid,
-                                          obj=StringIO.StringIO(rmap),
-                                          newPid=resource_map_pid,
-                                          sysmeta_pyxb=sysmeta)
-                    except Exception as e:
-                        logger.error(e)
-                else:
-                    logger.warn('Create: {}'.format(resource_map_pid))
-                    try:
-                        gmn_client.create(pid=resource_map_pid,
-                                          obj=StringIO.StringIO(rmap),
-                                          sysmeta_pyxb=sysmeta)
-                    except Exception as e:
-                        logger.error(e)
+    head = qm.get_head()
+    while head is not None:
+        logger.warn('Active package: {p}'.format(p=head.package))
+        p = Package(head)
+        if p.public:
+            # gmn_client = create_gmn_client()
+            logger.warn('Processing: {p}'.format(p=p.package))
+            resources = p.resources
+            if p.method == properties.CREATE:
+                # TODO: Process package create
+                pass
+            elif p.method == properties.UPDATE:
+                # TODO: Process package update
+                pass
+            elif p.method == properties.DELETE:
+                # TODO: Process package delete
+                pass
+            else:
+                msg = 'Unrecognized package event "{event}" for' \
+                      'package: {package}'.format(event=p.method,
+                                                  package=p.package)
+                raise(AdapterIncompleteStateException(msg))
 
-            else:  # deleteDataPackage
-                # Build single list of resources, including scimeta, ore, and data
-                resources = []
-                resources.append(package.doi)
-                resources.append(package.resources[properties.METADATA])
-                for resource in package.resources[properties.DATA]:
-                    resources.append(resource)
-
-                # Process deletion for list of resources
-                for resource in resources:
-                    logger.warn('Delete: {}'.format(resource))
-                    try:
-                        gmn_client.archive(pid=resource)
-                    except Exception as e:
-                        logger.error(e)
-        else:
-            logger.warn('Package {p} is not public'.format(
-                                                    p=package.package_str))
-        qm.dequeue(event_package=package)
-        package = qm.get_head()
+        qm.dequeue(package=p.package, method=p.method)
+        head = qm.get_head()
 
     logger.warn('Queue empty')
     lock.release()
