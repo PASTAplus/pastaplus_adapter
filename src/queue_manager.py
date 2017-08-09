@@ -166,7 +166,7 @@ class QueueManager(object):
         Return the first predecessor of the event package
 
         :param event_package: Package instance of event package
-        :return: Predecessor as package instance or None if none found
+        :return: Predecessor as event record or None if none found
         """
         scope, identifier, revision = package.split('.')
         return self.session.query(Queue).filter(Queue.scope == scope,
