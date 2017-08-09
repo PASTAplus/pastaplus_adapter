@@ -37,7 +37,7 @@ Base = declarative_base()
 
 class Queue(Base):
     """
-    SQLAlchemy ORE for adapter queue
+    SQLAlchemy ORM for adapter queue
     """
     __tablename__ = 'queue'
 
@@ -132,7 +132,7 @@ class QueueManager(object):
         :return: Adapter queue event record object
         """
         try:
-            event = self.session.query(Queue).filter(
+            return self.session.query(Queue).filter(
                 Queue.package == package,
                 Queue.method == method).one()
         except NoResultFound as e:
