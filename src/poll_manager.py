@@ -32,8 +32,7 @@ from queue_manager import QueueManager
 logger = logging.getLogger('poll_manager')
 
 
-def bootstrap():
-    url = properties.PASTA_BASE_URL + '/changes/eml?'
+def bootstrap(url=None):
     now = datetime.now()
     fromDate = datetime.strptime(properties.FROM_DATE,
                                  '%Y-%m-%dT%H:%M:%S.%f')
@@ -57,11 +56,11 @@ def parse(url=None, fromDate=None, toDate=None, scope=properties.SCOPE):
                      query
     :return: 0 if successful, 1 otherwise
     """
-    if fromDate:
+    if fromDate is not None:
         url = url + 'fromDate=' + fromDate + '&'
-    if toDate:
+    if toDate is not None:
         url = url + 'toDate=' + toDate + '&'
-    if scope:
+    if scope is not None:
         url = url + 'scope=' + scope
 
     try:
@@ -126,9 +125,13 @@ def main():
     url = properties.PASTA_BASE_URL + '/changes/eml?'
     qm = QueueManager()
 
-    fromDate = datetime.strftime(qm.get_last_datetime(), '%Y-%m-%dT%H:%M:%S.%f')
-    if not fromDate:
-        bootstrap()
+    fromDate = None
+    dt = qm.get_last_datetime()
+    if dt is not None:
+        fromDate = datetime.strftime(dt, '%Y-%m-%dT%H:%M:%S.%f')
+
+    if fromDate is None:
+        bootstrap(url=url)
     else:
         parse(url=url, fromDate=fromDate)
 
