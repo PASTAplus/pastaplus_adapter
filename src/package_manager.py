@@ -175,7 +175,6 @@ def main():
         logger.warn('Active package: {p}'.format(p=head.package))
         p = Package(head)
         if p.public:
-            # gmn_client = create_gmn_client()
             logger.warn('Processing: {p}'.format(p=p.package))
             if p.method == properties.CREATE:
                 process_create_package(package=p)
@@ -189,7 +188,7 @@ def main():
                                                   package=p.package)
                 raise(AdapterIncompleteStateException(msg))
         else:
-            logger.warn('Package not fully public: {p}'.format(p=p.package))
+            logger.warn('Package not public: {p}'.format(p=p.package))
 
         qm.dequeue(package=p.package, method=p.method)
         head = qm.get_head()
