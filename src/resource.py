@@ -31,6 +31,7 @@ logger = logging.getLogger('resource')
 class ResourceBase(object):
 
     def __init__(self, url=None, owner=None):
+        logger.info('Building resource: {r}'.format(r=url))
         self._acl = None
         self._checksum_value = None
         self._checksum_algorithm = None
