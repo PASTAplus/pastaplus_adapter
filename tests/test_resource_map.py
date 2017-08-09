@@ -45,19 +45,5 @@ class TestResourceMap(unittest.TestCase):
         pass
 
 
-class Event(object):
-    """
-    Mock class to simulate a database recorded PASTA event from the
-    adapter_queue.sqlite database.
-    """
-    def __init__(self):
-        self.package = 'knb-lter-nin.1.1'
-        self.datetime = datetime.strptime('2017-02-23T13:09:29.166',
-                                          '%Y-%m-%dT%H:%M:%S.%f')
-        self.method = 'createDataPackage'
-        self.owner = 'uid=LNO,o=LTER,dc=ecoinformatics,dc=org'
-        self.doi = 'doi:10.6073/pasta/3bcc89b2d1a410b7a2c678e3c55055e1'
-
-
 if __name__ == '__main__':
     unittest.main()
