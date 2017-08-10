@@ -13,9 +13,11 @@
 """
 
 import logging
+import hashlib
 import xml.etree.ElementTree as ET
 
 import requests
+import d1_common.resource_map
 import d1_common.types.exceptions
 import d1_common.types.generated.dataoneTypes_v1 as dataoneTypes_v_1
 import d1_common.types.generated.dataoneTypes_v2_0 as dataoneTypes_v2_0
@@ -150,10 +152,10 @@ class ResourceMetadata(ResourceBase):
 
     def __init__(self, url=None, owner=None):
         super(ResourceMetadata,self).__init__(url, owner)
+        self._acl = self._get_acl('/metadata/eml/', '/metadata/acl/eml/')
         self._checksum_value = \
             self._get_checksum_value('/metadata/eml/', '/metadata/checksum/eml/')
         self._checksum_algorithm = properties.CHECKSUM_ALGORITHM
-        self._acl = self._get_acl('/metadata/eml/', '/metadata/acl/eml/')
         self._format_identifier = self._get_format_id()
         self._size = self._get_size()
         self._vendor_specific_header = {'VENDOR-GMN-REMOTE-URL': url}
@@ -191,16 +193,13 @@ class ResourceReport(ResourceBase):
 
     def __init__(self, url=None, owner=None):
         super(ResourceReport,self).__init__(url, owner)
+        self._acl = self._get_acl('/report/eml/', '/report/acl/eml/')
         self._checksum_value = \
             self._get_checksum_value('/report/eml/', '/report/checksum/eml/')
         self._checksum_algorithm = properties.CHECKSUM_ALGORITHM
-        self._acl = self._get_acl('/report/eml/', '/report/acl/eml/')
-        self._format_identifier = self._get_format_id()
+        self._format_identifier = 'text/xml'
         self._size = self._get_size()
         self._vendor_specific_header = {'VENDOR-GMN-REMOTE-URL': url}
-
-    def _get_format_id(self):
-        return 'text/xml'
 
     def _get_size(self):
         size = None
@@ -214,10 +213,10 @@ class ResourceData(ResourceBase):
 
     def __init__(self, url=None, owner=None):
         super(ResourceData,self).__init__(url, owner)
+        self._acl = self._get_acl('/data/eml/', '/data/acl/eml/')
         self._checksum_value = \
             self._get_checksum_value('/data/eml/', '/data/checksum/eml/')
         self._checksum_algorithm = properties.CHECKSUM_ALGORITHM
-        self._acl = self._get_acl('/data/eml/', '/data/acl/eml/')
         self._format_identifier = self._get_format_id()
         self._size = self._get_size()
         self._vendor_specific_header = {'VENDOR-GMN-REMOTE-URL': url}
@@ -248,5 +247,35 @@ class ResourceData(ResourceBase):
 
 class ResourceOre(ResourceBase):
 
-    def __init__(self, url=None, owner=None):
-        super(ResourceOre,self).__init__(url, owner)
+    def __init__(self, doi=None, owner=None, resources=None):
+        super(ResourceOre,self).__init__(doi, owner)
+        ore_xml = _build_ore(pid=doi, resources=resources)
+        self._acl = self._get_acl('/metadata/eml/', '/metadata/acl/eml/')
+        self._checksum_algorithm = 'SHA-1'
+        self._checksum_value = hashlib.sha1(ore_xml).hexdigest()
+        self._format_identifier = 'http://www.openarchives.org/ore/terms'
+        self._object = ore_xml
+        self._resources = None
+        self._size = len(ore_xml)
+
+    @property
+    def predecessor(self):
+        return self._predecessor
+
+    @predecessor.setter
+    def predecessor(self, doi):
+        self._predecessor = doi
+
+
+def _build_ore(pid=None, resources=None):
+    data = []
+    data.append(resources[properties.METADATA].identifier)
+    data.append(resources[properties.REPORT].identifier)
+    for data_resource in resources[properties.DATA]:
+        data.append(data_resource.identifier)
+
+    ore = d1_common.resource_map.ResourceMap(base_url=properties.D1_BASE_URL)
+    ore.oreInitialize(pid=pid)
+    ore.addMetadataDocument(pid=resources[properties.METADATA].identifier)
+    ore.addDataDocuments(scidata_pid_list=data, scimeta_pid=resources[properties.METADATA].identifier)
+    return ore.serialize()
