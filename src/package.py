@@ -21,6 +21,7 @@ import adapter_utilities
 import properties
 from resource import ResourceData
 from resource import ResourceMetadata
+from resource import ResourceOre
 from resource import ResourceReport
 
 logger = logging.getLogger('package')
@@ -29,19 +30,16 @@ logger = logging.getLogger('package')
 class Package(object):
 
     def __init__(self, event=None):
-        if event is not None:
-            self._datetime = event.datetime
-            self._doi = event.doi.strip()
-            self._method = event.method.strip()
-            self._owner = event.owner.strip()
-            self._package = event.package.strip()
-            self._scope, self._identifier, self._revision = self._package.split('.')
-            self._package_path = self._package.replace('.', '/')
-            self._resources = _build_resource_list(self.package_url, self._owner)
-            self._public = _assert_package_is_public(self._resources)
-        else:
-            msg = 'Package event is None'
-            raise(AdapterIncompleteStateException(msg))
+        self._datetime = event.datetime
+        self._doi = event.doi.strip()
+        self._method = event.method.strip()
+        self._owner = event.owner.strip()
+        self._package = event.package.strip()
+        self._scope, self._identifier, self._revision = self._package.split('.')
+        self._package_path = self._package.replace('.', '/')
+        self._resources = _build_resource_list(self.package_url, self._owner,
+                                               self._doi)
+        self._public = _assert_package_is_public(self._resources)
 
     @property
     def datetime(self):
@@ -128,7 +126,7 @@ def _assert_resource_is_public(resource_url):
     return public
 
 
-def _build_resource_list(package_map_url, principal_owner):
+def _build_resource_list(package_map_url, principal_owner, doi):
     """
     Return a dict of data package resources without the reflexive package
     resource.
@@ -139,6 +137,7 @@ def _build_resource_list(package_map_url, principal_owner):
     """
     resources = {properties.METADATA: '',
                  properties.REPORT: '',
+                 properties.ORE: '',
                  properties.DATA: []}
 
     url = package_map_url
@@ -154,6 +153,10 @@ def _build_resource_list(package_map_url, principal_owner):
         elif properties.DATA_PATTERN in resource_url:
             rd = ResourceData(url=resource_url, owner=principal_owner)
             resources[properties.DATA].append(rd)
+
+    ro = ResourceOre(doi=doi, owner=principal_owner, resources=resources)
+    resources[properties.ORE] = ro
+
     return resources
 
 
