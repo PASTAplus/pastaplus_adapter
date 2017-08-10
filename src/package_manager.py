@@ -15,6 +15,7 @@ from __future__ import print_function
 """
 
 import logging
+import StringIO
 
 
 # Set level to WARN to avoid verbosity in requests at INFO
@@ -41,8 +42,7 @@ def create_gmn_client():
         base_url=properties.GMN_BASE_URL,
         cert_pem_path=properties.GMN_CERT_PATH,
         cert_key_path=properties.GMN_KEY_PATH,
-        timeout=properties.GMN_RESPONSE_TIMEOUT,
-        verify_tls=properties.VERIFY_TLS,
+        verify_tls=properties.VERIFY_TLS
     )
 
 
@@ -61,26 +61,25 @@ def get_replication_policy(eml_xml=None):
 
 def gmn_create(resource=None):
     logger.warn('Create: {}'.format(resource.identifier))
-    # gmn_client = create_gmn_client()
+    gmn_client = create_gmn_client()
     try:
-        # gmn_client.create(pid=resource.identifier,
-        #                   obj=StringIO.StringIO(resource.object),
-        #                   sysmeta_pyxb=resource.get_d1_sys_meta(),
-        #                   vendorSpecific=resource.vendor_specific_header)
-        pass
+        gmn_client.create(pid=resource.identifier,
+                          obj=StringIO.StringIO(resource.object),
+                          sysmeta_pyxb=resource.get_d1_sys_meta(),
+                          vendorSpecific=resource.vendor_specific_header)
     except Exception as e:
         logger.error(e)
 
 
 def gmn_update(resource=None):
     logger.warn('Update: {}'.format(resource.identifier))
-    # gmn_client = create_gmn_client()
+    gmn_client = create_gmn_client()
     try:
-        # gmn_client.update(pid=resource.predecessor
-        #                   obj=StringIO.StringIO(resource.object),
-        #                   newPid = resource.identifier,
-        #                   sysmeta_pyxb=resource.get_d1_sys_meta(),
-        #                   vendorSpecific=resource.vendor_specific_header)
+        gmn_client.update(pid=resource.predecessor,
+                          obj=StringIO.StringIO(resource.object),
+                          newPid = resource.identifier,
+                          sysmeta_pyxb=resource.get_d1_sys_meta(),
+                          vendorSpecific=resource.vendor_specific_header)
         pass
     except Exception as e:
         logger.error(e)
@@ -88,10 +87,9 @@ def gmn_update(resource=None):
 
 def gmn_archive(resource=None):
     logger.warn('Archive: {}'.format(resource.identifier))
-    # gmn_client = create_gmn_client()
+    gmn_client = create_gmn_client()
     try:
-        # gmn_client.archive(pid=resource.identifier)
-        pass
+        gmn_client.archive(pid=resource.identifier)
     except Exception as e:
         logger.error(e)
 
