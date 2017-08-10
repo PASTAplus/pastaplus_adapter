@@ -88,11 +88,14 @@ class SysMeta(object):
         :return: DataONE access policy as pyxb object
         """
         accessPolicy = dataoneTypes_v_1.accessPolicy()
-        for policy in access_policy:
-            accessRule = dataoneTypes_v_1.AccessRule()
-            accessRule.subject.append(policy['principal'])
-            accessRule.permission.append(policy['permission'])
-            accessPolicy.append(accessRule)
+
+        if access_policy is not None:
+            for policy in access_policy:
+                accessRule = dataoneTypes_v_1.AccessRule()
+                accessRule.subject.append(policy['principal'])
+                accessRule.permission.append(policy['permission'])
+                accessPolicy.append(accessRule)
+
         return accessPolicy
 
     def d1_sys_meta(self):
