@@ -23,6 +23,7 @@ import xml.etree.ElementTree as ET
 
 import requests
 
+import adapter_utilities
 from event import Event
 from lock import Lock
 import properties
@@ -63,16 +64,10 @@ def parse(url=None, fromDate=None, toDate=None, scope=properties.SCOPE):
     if scope is not None:
         url = url + 'scope=' + scope
 
-    try:
-        r = requests.get(url)
-    except (requests.exceptions.RequestException,
-            requests.exceptions.BaseHTTPError,
-            requests.exceptions.HTTPError,
-            requests.exceptions.ConnectionError) as e:
-        logger.error(e)
-        return 1
 
-    if r.status_code == requests.codes.ok:
+    r = adapter_utilities.requests_get_url_wrapper(url=url)
+
+    if r is not None:
         qm = QueueManager()
         tree = ET.ElementTree(ET.fromstring(r.text.strip()))
         for dataPackage in tree.iter('dataPackage'):
@@ -104,12 +99,6 @@ def parse(url=None, fromDate=None, toDate=None, scope=properties.SCOPE):
                     qm.enqueue(event=event)
                 else:
                     logger.info('Package {} out of scope'.format(package.text))
-
-        return 0
-    else:
-        logger.warn('Bad status code ({code}) for {url}'.format(
-            code=r.status_code, url=url))
-        return 1
 
 
 def main():
