@@ -140,6 +140,7 @@ def _build_resource_list(package_map_url, principal_owner, doi):
                  properties.ORE: '',
                  properties.DATA: []}
 
+    package_acl = None
     url = package_map_url
     r = adapter_utilities.requests_get_url_wrapper(url=url)
     resource_urls = r.text.split()
@@ -147,6 +148,7 @@ def _build_resource_list(package_map_url, principal_owner, doi):
         if properties.METADATA_PATTERN in resource_url:
             rm = ResourceMetadata(url=resource_url, owner=principal_owner)
             resources[properties.METADATA] = rm
+            package_acl = rm.acl
         elif properties.REPORT_PATTERN in resource_url:
             rr = ResourceReport(url=resource_url, owner=principal_owner)
             resources[properties.REPORT] = rr
@@ -155,6 +157,7 @@ def _build_resource_list(package_map_url, principal_owner, doi):
             resources[properties.DATA].append(rd)
 
     ro = ResourceOre(doi=doi, owner=principal_owner, resources=resources)
+    ro.acl = package_acl # Assign ORE same ACL as metadata/package ACL
     resources[properties.ORE] = ro
 
     return resources
