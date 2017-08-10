@@ -24,6 +24,7 @@ from datetime import datetime
 
 import properties
 from resource import ResourceMetadata
+from resource import ResourceOre
 from resource import ResourceReport
 from resource import ResourceData
 
@@ -60,14 +61,41 @@ class TestResource(unittest.TestCase):
                               owner=TestResource.owner)
         self.assertIsNotNone(rm)
 
+    def testResourceOre(self):
+        rm = Resource(TestResource.metadata_resource)
+        rr = Resource(TestResource.report_resource)
+        rd = Resource(TestResource.data_resource)
+
+        resources = {properties.METADATA: rm,
+                     properties.REPORT: rr,
+                     properties.ORE: '',
+                     properties.DATA: [rd]}
+
+        ro = ResourceOre(doi=TestResource.doi, owner=TestResource.owner, resources=resources)
+        self.assertIsNotNone(ro)
+
     def test_build_system_metadata(self):
         rm = ResourceMetadata(url=TestResource.metadata_resource,
                               owner=TestResource.owner)
         sm = rm.get_d1_sys_meta()
         self.assertIsNotNone(sm)
 
-    def test_get_science_metadata(self):
-        pass
+
+class Resource(object):
+    """
+    Mock Resource class containing only the "identifier" attribute
+    """
+
+    def __init__(self, identifier):
+        self._indentifier = identifier
+
+    @property
+    def identifier(self):
+        return self._indentifier
+
+    @identifier.setter
+    def identifier(self, id):
+        self._identifier = id
 
 
 if __name__ == '__main__':
