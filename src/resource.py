@@ -92,21 +92,6 @@ class ResourceBase(object):
                         'permission': 'changePermission'})
         return acl
 
-    def _get_d1_access_policy(self, acl):
-        """
-        Return a DataONE system metadata access policy object based on the
-        generated access policy found for the resource.
-
-        :param acl: EML access control list of principals and permissions
-        :return: DataONE access policy as pyxb object
-        """
-        accessPolicy = dataoneTypes_v_1.accessPolicy()
-        for set in acl:
-            accessRule = dataoneTypes_v_1.AccessRule()
-            accessRule.subject.append(set['principal'])
-            accessRule.permission.append(set['permission'])
-            accessPolicy.append(accessRule)
-        return accessPolicy
 
     @property
     def acl(self):
