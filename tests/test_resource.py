@@ -72,6 +72,7 @@ class TestResource(unittest.TestCase):
                      properties.DATA: [rd]}
 
         ro = ResourceOre(doi=TestResource.doi, owner=TestResource.owner, resources=resources)
+        sm = ro.get_d1_sys_meta()
         self.assertIsNotNone(ro)
 
     def test_build_system_metadata(self):
