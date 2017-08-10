@@ -108,6 +108,14 @@ class ResourceBase(object):
             accessPolicy.append(accessRule)
         return accessPolicy
 
+    @property
+    def acl(self):
+        return self._acl
+
+    @acl.setter
+    def acl(self, a):
+        self._acl = a
+
     def get_d1_sys_meta(self):
         """
         Return a D1 system metadata object for the given resource as pyxb
@@ -250,7 +258,6 @@ class ResourceOre(ResourceBase):
     def __init__(self, doi=None, owner=None, resources=None):
         super(ResourceOre,self).__init__(doi, owner)
         ore_xml = _build_ore(pid=doi, resources=resources)
-        self._acl = self._get_acl('/metadata/eml/', '/metadata/acl/eml/')
         self._checksum_algorithm = 'SHA-1'
         self._checksum_value = hashlib.sha1(ore_xml).hexdigest()
         self._format_identifier = 'http://www.openarchives.org/ore/terms'
