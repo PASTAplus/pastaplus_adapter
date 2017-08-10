@@ -20,22 +20,18 @@ import logging
 # Set level to WARN to avoid verbosity in requests at INFO
 logging.basicConfig(format='%(asctime)s %(levelname)s (%(name)s): %(message)s',
                     datefmt='%Y-%m-%d %H:%M:%S%z', level=logging.WARN)
-import StringIO
+
 import xml.etree.ElementTree as ET
 
 import d1_client.cnclient_2_0
 import d1_client.mnclient_2_0
 
 from adapter_exceptions import AdapterIncompleteStateException
-from package import Package
-from queue_manager import QueueManager
-from resource import ResourceMetadata
-from resource import ResourceReport
-from resource import ResourceData
-from resource import ResourceOre
-from resource_map import ResourceMap
 from lock import Lock
+from package import Package
 import properties
+from queue_manager import QueueManager
+
 
 logger = logging.getLogger('package_manager')
 
@@ -48,22 +44,6 @@ def create_gmn_client():
         timeout=properties.GMN_RESPONSE_TIMEOUT,
         verify_tls=properties.VERIFY_TLS,
     )
-
-
-def get_predecessor(queue_manager=None, package=None):
-    """
-    Return first predecessor package that is publicly accessible (some
-    predecessors may exist in PASTA, but are not fully public)
-
-    :param queue_manager: queue manager instance for the adapter queue
-    :param package: the package instance being processed
-    :return: predecessor as a package instance or None if none found
-    """
-    predecessor = queue_manager.get_predecessor(event_package=package)
-    while predecessor and not predecessor.public:
-        predecessor = queue_manager.get_predecessor(event_package=predecessor)
-    return predecessor
-
 
 
 def get_replication_policy(eml_xml=None):
@@ -96,7 +76,7 @@ def gmn_update(resource=None):
     logger.warn('Update: {}'.format(resource.identifier))
     # gmn_client = create_gmn_client()
     try:
-        # gmn_client.update(pid=resource.predecessor_id
+        # gmn_client.update(pid=resource.predecessor
         #                   obj=StringIO.StringIO(resource.object),
         #                   newPid = resource.identifier,
         #                   sysmeta_pyxb=resource.get_d1_sys_meta(),
@@ -123,6 +103,7 @@ def process_create_package(package=None):
     data_resources = r[properties.DATA]
     for rd in data_resources:
         gmn_create(rd)
+    gmn_create(r[properties.ORE])
 
 
 def process_update_package(package=None, queue_manager=None):
@@ -136,8 +117,8 @@ def process_update_package(package=None, queue_manager=None):
             predecessor = queue_manager.get_predecessor(predecessor.package)
 
     r = package.resources
-    rm = r[properties.METADATA]
 
+    rm = r[properties.METADATA]
     if predecessor is not None:
         rm.predecessor = predecessor.package
         gmn_update(rm)
@@ -150,6 +131,14 @@ def process_update_package(package=None, queue_manager=None):
     for rd in data_resources:
         gmn_create(rd)
 
+    ro = r[properties.ORE]
+    if predecessor is not None:
+        ro.predecessor = predecessor.doi
+        gmn_update(ro)
+    else:
+        gmn_create(ro)
+
+
 def process_archive_package(package=None):
     r = package.resources
     gmn_archive(r[properties.METADATA])
@@ -157,6 +146,7 @@ def process_archive_package(package=None):
     data_resources = r[properties.DATA]
     for rd in data_resources:
         gmn_archive(rd)
+    gmn_archive(r[properties.ORE])
 
 
 def main():
