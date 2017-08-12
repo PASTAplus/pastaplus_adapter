@@ -45,7 +45,7 @@ class ResourceBase(object):
         self._owner = owner
         self._predecessor = None
         self._replication_policy = None
-        self._rights_holder = owner
+        self._rights_holder = properties.DEFAULT_RIGHTS_HOLDER
         self._size = None
         self._url = url
         self._vendor_specific_header = None
